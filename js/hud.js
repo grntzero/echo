@@ -97,7 +97,7 @@
       const done = d.tut ? 0 : DN.cleared(id);
       b.innerHTML = '<i></i><span class="tx"><b></b><small></small></span>'; // 이름 한 줄 · 설명 아래 줄(낱말 중간 끊김 X — 검수 지적)
       b.querySelector('b').textContent = d.name; b.querySelector('small').textContent = !d.open ? d.ownerName + ' · 곧 열려요' : d.tut ? '연습 던전 · 모두' : d.ownerName + ' 던전 · 도장 ' + done + '/' + TG.LEVEL_MAX;
-      if (d.open) b.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); DN.select(id, DN.sel.dun === id ? DN.sel.lv : DN.maxPick(id)); H.dunRender(); });
+      if (d.open) b.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); DN.select(id, DN.sel.dun === id ? DN.sel.lv : Math.min(DN.cleared(id) + 1, DN.maxPick(id))); H.dunRender(); }); // 11-26 대표: 베타도 던전 고르면 도전할 단계(처음이면 1)로 — 전엔 maxPick 이라 베타에선 10(???)으로 바로 감
       H.dunList.appendChild(b);
     });
     // 단계 10칸(연습 던전은 단계 없음): 깬 칸 = 도장, 다음 칸 = 도전, 그 위는 잠김, 10단계는 깨기 전 「???」
