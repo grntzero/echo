@@ -43,6 +43,13 @@
     uq_berri: { sfx: true, sec: 0.8, make: uqCallBerri },   // 베리 「베리 비!」: 마림바 두 음 + 마라카스 톡톡
     uq_sefo_kids: { sfx: true, sec: 0.9, make: uqCallSefoKids }, // 11-26 세포 「세포키즈 출동!」(2번째 연출): 호루라기 삑 짧게 + 박수 둘 + 말렛 세 음 올라감(아이 목소리 X — 효과음만). 대표 녹음 오면 assets/audio/uq_sefo_kids.mp3
     sfx_kids_stomp: { sfx: true, sec: 0.6, make: kidsStompSfx },   // 11-26 세포키즈 다 같이 「쿵!」: 낮은 북 둥 + 박수 한 번 + 반짝
+    // 11-28 주민 던전 3개 임시 루프·끝 효과음(던전설계.md 1~3절). 본인 음원 오면 assets/audio/<키>.mp3 만 넣고 tools/pack_assets.py (권리 확인 뒤). 사람 목소리 합성 X
+    bgm_dial_poy: { bpm: 120, bars: 8, make: dialPoyLoop },          // POY 「다이얼 기관실」 — 부드러운 하우스/로파이(Eb 장조, 일렉피아노 화음·부드러운 킥·딸깍 햇·필터 열림)
+    bgm_train_loki: { bpm: 132, bars: 8, make: trainLokiLoop },      // LOKI 「말풍선 객차」 — 빠른 트레인 비트(G 단조 밝은 쪽, 칙-칙-폭-폭 셰이커·브라스 스탭·콜앤리스폰스 자리는 브라스로)
+    bgm_jungle_killaton: { bpm: 122, bars: 8, make: jungleKillatonLoop }, // KILLATON 「정글 온실」 — 정글 퍼커션 하우스(F 장조, 봉고·콩가·셰이커·둥근 베이스·마림바·떼창 패드)
+    sfx_dial_poy: { sfx: true, sec: 1.1, make: dialPoySfx },         // POY 끝: 다이얼 딸깍 3번 → 올라가는 스윕 + 밝은 화음
+    sfx_train_loki: { sfx: true, sec: 1.0, make: trainLokiSfx },     // LOKI 끝: 기차 경적 두 음(장3도) + 박수 둘
+    sfx_jungle_killaton: { sfx: true, sec: 1.2, make: jungleKillatonSfx }, // KILLATON 끝: 북 둥-다다-둥 + 밝은 화음 스탭
   };
   A.fillTempLoops = function () {
     const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!AC) return;
@@ -247,6 +254,72 @@
     [74, 78, 81, 86].forEach((n, i) => { add(0.02 + i * 0.11, 0.5, NOTE(n), 0.42, 0, (i - 1.5) * 0.3, 6); add(0.02 + i * 0.11, 0.25, NOTE(n + 12), 0.12, 0, 0, 12); });
     for (let i = 0; i < 10; i++) add(0.46 + i * 0.045, 0.12, NOTE(86 + (i % 3) * 3), 0.1, 0, (i % 2 ? 0.5 : -0.5), 18); // 반짝 잔향
     add(0.5, 0.45, NOTE(90), 0.18, 0, 0, 5, NOTE(98)); // 작은 글리산도(위로)
+  }
+  // 11-28 POY 「다이얼 기관실」 임시 루프(120 BPM·Eb 장조·8마디 = 16초): 부드러운 킥·딸깍 하이햇(림 클릭)·따뜻한 일렉피아노(사인+배음, 7화음)·둥근 베이스·필터가 천천히 열리는 느낌(뒤로 갈수록 배음 ↑). 무섭지 않게
+  function dialPoyLoop(l, r, sr, bpm, bars) {
+    const beat = 60 / bpm, K = synthKit(l, r, sr, 51), NOTE = K.NOTE, add = K.add, kick = K.kick, hat = K.hat;
+    const CH = [[63, 67, 70, 74], [60, 63, 67, 70], [68, 72, 75, 79], [70, 74, 77, 80], [63, 67, 70, 74], [65, 68, 72, 75], [68, 72, 75, 79], [70, 74, 77, 80]]; // Ebmaj7 · Cm7 · Abmaj7 · Bb7 · Ebmaj7 · Fm7 · Abmaj7 · Bb7
+    const BASS = [39, 36, 44, 46, 39, 41, 44, 46];
+    const MEL = [75, 0, 0, 77, 79, 0, 82, 0,  80, 0, 79, 0, 77, 0, 0, 0,  75, 0, 77, 0, 79, 0, 0, 75,  77, 0, 74, 0, 70, 0, 0, 0];
+    for (let b = 0; b < bars; b++) {
+      const t0 = b * 4 * beat, ch = CH[b % CH.length], open = 0.3 + 0.7 * (b / Math.max(1, bars - 1)); // 필터 열림(배음 크기)
+      for (let q = 0; q < 4; q++) {
+        const t = t0 + q * beat;
+        kick(t, 0.55); hat(t + beat / 2, 0.11); if (q % 2) add(t, 0.03, 1800, 0.12, 0, 0.3, 90); // 딸깍(림 클릭)
+        add(t, beat * 0.8, NOTE(BASS[b % 8]), 0.4, 0, 0, 3.5); // 둥근 베이스
+        if (q === 0 || q === 2) ch.forEach((n, k) => { add(t + 0.01 * k, beat * 1.6, NOTE(n), 0.1, 0, (k - 1.5) * 0.3, 1.8); add(t + 0.01 * k, beat * 0.6, NOTE(n + 12), 0.035 * open, 1, (k - 1.5) * 0.3, 5); }); // 일렉피아노 화음(배음 = 필터)
+      }
+      for (let e = 0; e < 8; e++) { const m = MEL[(b * 8 + e) % MEL.length]; if (m) { const t = t0 + e * beat / 2; add(t, beat * 0.7, NOTE(m), 0.2, 0, 0.15, 3.2); add(t, beat * 0.3, NOTE(m + 12), 0.05 * open, 0, -0.15, 8); } }
+    }
+  }
+  // 11-28 LOKI 「말풍선 객차」 임시 루프(132 BPM·G 단조 밝은 쪽·8마디 ≈ 14.5초): 칙-칙-폭-폭 셰이커(16분 강약)·킥·박수·짧은 브라스 스탭(사각파 순하게)·통통 베이스 — 콜앤리스폰스 자리는 브라스 두 음
+  function trainLokiLoop(l, r, sr, bpm, bars) {
+    const beat = 60 / bpm, K = synthKit(l, r, sr, 61), NOTE = K.NOTE, add = K.add, kick = K.kick, clap = K.clap;
+    const CH = [[67, 70, 74], [63, 67, 70], [65, 69, 72], [62, 66, 69], [67, 70, 74], [63, 67, 70], [60, 63, 67], [62, 66, 69]]; // Gm · Eb · F · D · Gm · Eb · Cm · D
+    const BASS = [43, 39, 41, 38, 43, 39, 36, 38];
+    for (let b = 0; b < bars; b++) {
+      const t0 = b * 4 * beat, ch = CH[b % CH.length];
+      for (let q = 0; q < 4; q++) {
+        const t = t0 + q * beat;
+        kick(t, q % 2 ? 0.5 : 0.8); if (q % 2) clap(t, 0.28);
+        for (let s2 = 0; s2 < 4; s2++) add(t + s2 * beat / 4, 0.05, 0, s2 % 2 ? 0.07 : 0.15, 3, s2 % 2 ? 0.3 : -0.3, s2 % 2 ? 80 : 45); // 칙-칙-폭-폭 셰이커
+        add(t, beat * 0.35, NOTE(BASS[b % 8]), 0.45, 2, 0, 7); add(t + beat * 0.5, beat * 0.25, NOTE(BASS[b % 8] + 12), 0.22, 2, 0, 10);
+      }
+      const st = b % 2 ? [[0, 0.25], [0.75, 0.25], [1.5, 0.5]] : [[2, 0.25], [2.5, 0.25], [3, 0.6]]; // 브라스 스탭(부름) · 다음 마디 대답
+      st.forEach(([o, d]) => ch.forEach((n, k) => add(t0 + o * beat, beat * d, NOTE(n + 12), 0.1, 2, (k - 1) * 0.4, 6)));
+      if (b % 4 === 3) { add(t0 + 3.5 * beat, beat * 0.4, NOTE(79), 0.16, 4, 0, 5); add(t0 + 3.75 * beat, beat * 0.4, NOTE(83), 0.16, 4, 0, 5); } // 「Hey!」 자리 = 브라스 두 음
+    }
+  }
+  // 11-28 KILLATON 「정글 온실」 임시 루프(122 BPM·F 장조·8마디 ≈ 15.7초): 킥 네 박·봉고/콩가(사인 북 높낮이)·셰이커·둥근 신스 베이스·마림바 가락·후렴 자리 떼창 패드(사람 목소리 X — 화음 패드)
+  function jungleKillatonLoop(l, r, sr, bpm, bars) {
+    const beat = 60 / bpm, K = synthKit(l, r, sr, 71), NOTE = K.NOTE, add = K.add, kick = K.kick, hat = K.hat;
+    const CH = [[65, 69, 72], [70, 74, 77], [62, 65, 69], [72, 76, 79], [65, 69, 72], [70, 74, 77], [72, 76, 79], [65, 69, 72]]; // F · Bb · Dm · C · F · Bb · C · F
+    const BASS = [41, 46, 38, 48, 41, 46, 48, 41];
+    const MEL = [77, 0, 81, 0, 84, 81, 0, 77,  79, 0, 77, 0, 74, 0, 0, 0,  72, 0, 77, 0, 81, 0, 79, 77,  76, 0, 79, 0, 77, 0, 0, 0];
+    const BONGO = [[0.5, 340], [0.75, 340], [1.5, 260], [2.5, 340], [2.75, 260], [3.25, 340], [3.5, 260]];
+    for (let b = 0; b < bars; b++) {
+      const t0 = b * 4 * beat, ch = CH[b % CH.length];
+      for (let q = 0; q < 4; q++) { const t = t0 + q * beat; kick(t, 0.7); hat(t + beat / 2, 0.1); add(t + beat * 0.25, 0.05, 0, 0.06, 3, -0.3, 70); add(t + beat * 0.75, 0.05, 0, 0.06, 3, 0.3, 70); add(t, beat * 0.6, NOTE(BASS[b % 8]), 0.42, 0, 0, 4); add(t + beat * 0.5, beat * 0.3, NOTE(BASS[b % 8] + 12), 0.18, 1, 0, 8); }
+      BONGO.forEach(([o, f], i) => add(t0 + o * beat, 0.16, f, 0.32, 0, i % 2 ? 0.35 : -0.35, 22, f * 0.8)); // 봉고·콩가
+      if (b >= 4) ch.forEach((n, k) => add(t0, beat * 3.8, NOTE(n), 0.07, 1, (k - 1) * 0.6, 0.7)); // 후렴 자리 떼창 패드
+      for (let e = 0; e < 8; e++) { const m = MEL[(b * 8 + e) % MEL.length]; if (m) { const t = t0 + e * beat / 2; add(t, beat * 0.4, NOTE(m), 0.26, 0, 0.1, 8); add(t, beat * 0.2, NOTE(m + 24), 0.05, 0, -0.1, 16); } } // 마림바
+    }
+  }
+  function dialPoySfx(l, r, sr) {
+    const K = synthKit(l, r, sr, 53), NOTE = K.NOTE, add = K.add;
+    [0.02, 0.14, 0.26].forEach((t, i) => { add(t, 0.03, 2200 - i * 200, 0.5, 0, (i - 1) * 0.4, 90); add(t, 0.02, 0, 0.2, 3, 0, 120); }); // 딸깍 ×3
+    add(0.36, 0.5, NOTE(63), 0.3, 1, 0, 3, NOTE(87)); // 슈우- 올라가는 스윕
+    [75, 79, 82, 86].forEach((n, k) => add(0.7, 0.4, NOTE(n), 0.22, 0, (k - 1.5) * 0.3, 4)); // 밝은 화음(Ebmaj7)
+  }
+  function trainLokiSfx(l, r, sr) {
+    const K = synthKit(l, r, sr, 63), NOTE = K.NOTE, add = K.add;
+    [[0.02, 0.3], [0.36, 0.34]].forEach(([t, d]) => { [67, 71].forEach((n, k) => add(t, d, NOTE(n), 0.3, 2, (k - 0.5) * 0.4, 3)); }); // 뿌-뿌 경적(G·B 장3도)
+    [0.76, 0.88].forEach((t) => add(t, 0.12, 0, 0.5, 3, 0, 26)); // 박수 둘
+  }
+  function jungleKillatonSfx(l, r, sr) {
+    const K = synthKit(l, r, sr, 73), NOTE = K.NOTE, add = K.add, drum = K.drum;
+    [[0.02, 0.8], [0.3, 0.45], [0.42, 0.45], [0.6, 0.85]].forEach(([t, a]) => drum(t, a)); // 둥-다다-둥
+    [77, 81, 84, 89].forEach((n, k) => add(0.62, 0.5, NOTE(n), 0.2, 2, (k - 1.5) * 0.3, 4)); // 화음 스탭(F)
   }
   // 11-24 베리 확대 연출 끝: 마라카스 샤카샤카 두 번(잡음 짧게 4번) + 톡(나무 소리)
   function maracaBerriSfx(l, r, sr) {

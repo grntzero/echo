@@ -473,5 +473,6 @@
     rec.ambient = (dt) => { rec.t = (rec.t || 0) + dt; if (rec.t > (rec.petalIv || 0.5)) { rec.t = 0; const l = S.lamps[(TG.fr() * S.lamps.length) | 0]; TG.FX.emit(TG.FX.CELL.flower, l[0] + TG.fra(-1, 1), 3.6, l[1] + TG.fra(-1, 1), { vy: -0.5, vx: TG.fra(-0.4, 0.4), life: 2.6, size: 0.34, size1: 0.3, color: TG.fr() < 0.5 ? [2.4, 0.9, 1.5] : [2.5, 2.3, 2.4], vrot: 2, alpha: 0.9 }); } };
     finish(rec);
   });
+  AR.mapKit = { start, floor, deco, ground, center, finish, flGroup, flMesh, walls, groundShadows, barMid, seeded, starGeo }; // 11-28 주민 던전 맵(js/maps_res.js)이 같은 틀을 씀 — 동작 변화 0
   AR.mapBuilders.push(function () { finish(AR.maps.pipe); }); // 광장 정점 수(비교용)
 })();

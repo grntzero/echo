@@ -659,3 +659,51 @@ body.hasCard #result .btns { margin-top: calc(6px * var(--s)); }
 body.hasCard #rMode { display: none !important; } /* 자동 꼬리표는 걸린 시간 줄 옆으로(아래 .srow 안) */
 body.hasCard #result .ptitle { font-size: calc(20px * var(--s)); margin-top: calc(2px * var(--s)); margin-bottom: calc(3px * var(--s)); }
 .rcMode { font-style: normal; background: #ffd23f; border-radius: 99px; padding: 0 5px; border: 1.5px solid var(--ink); font-size: calc(10px * var(--s)); }
+
+/* 11-27 카드 2단계 순위판(js/net.js) */
+#rankPick { z-index: 22; }
+#rankPick .rankPanel { width: min(94vw, calc(620px * var(--s))); max-height: 92vh; max-height: 92dvh; overflow-y: auto; padding-top: calc(10px * var(--s)); padding-bottom: calc(12px * var(--s)); }
+#rankPick .ptitle { margin-top: calc(6px * var(--s)); margin-bottom: calc(4px * var(--s)); }
+.rkBox { display: flex; flex-wrap: wrap; align-items: center; gap: calc(6px * var(--s)); margin: calc(4px * var(--s)) 0; }
+.rkBox small { flex: 1 1 100%; font-size: calc(11px * var(--s)); opacity: 0.75; word-break: keep-all; }
+.rkBox .bub { font-size: calc(15px * var(--s)); padding: calc(5px * var(--s)) calc(12px * var(--s)); }
+#rankNickIn { font: inherit; font-size: calc(16px * var(--s)); padding: calc(5px * var(--s)) calc(10px * var(--s)); border: 3px solid var(--ink); border-radius: calc(12px * var(--s)); background: #fff; color: var(--ink); width: calc(200px * var(--s)); }
+.rkHead { display: flex; align-items: baseline; gap: calc(8px * var(--s)); margin: calc(4px * var(--s)) 0 calc(2px * var(--s)); }
+.rkHead b { font-size: calc(15px * var(--s)); }
+.rkHead small { font-size: calc(11px * var(--s)); opacity: 0.75; }
+.rkDuns { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(6px * var(--s)); margin-bottom: calc(6px * var(--s)); }
+#rankTabs { margin: calc(4px * var(--s)) 0; }
+#rankList { background: #fff; border: 3px solid var(--ink); border-radius: calc(12px * var(--s)); padding: calc(4px * var(--s)) calc(8px * var(--s)); min-height: calc(60px * var(--s)); max-height: calc(170px * var(--s)); overflow-y: auto; }
+.rkRow { display: grid; grid-template-columns: calc(30px * var(--s)) 1fr auto calc(42px * var(--s)); align-items: center; gap: calc(6px * var(--s)); padding: calc(3px * var(--s)) 0; border-bottom: 1px dashed rgba(27,20,36,0.2); font-size: calc(14px * var(--s)); }
+.rkRow:last-child { border-bottom: 0; }
+.rkRow.me { background: linear-gradient(90deg, rgba(255,210,63,0.35), transparent); border-radius: calc(6px * var(--s)); }
+.rkN { font-weight: 900; text-align: center; }
+.rkRow:nth-child(1) .rkN { color: #e5352b; } .rkRow:nth-child(2) .rkN { color: #c9a23a; } .rkRow:nth-child(3) .rkN { color: #5fc6ff; }
+.rkNick { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rkLv { font-style: normal; font-size: calc(10px * var(--s)); background: #e6e0ea; border-radius: calc(6px * var(--s)); padding: 0 calc(5px * var(--s)); margin-left: calc(4px * var(--s)); }
+.rkT { font-style: normal; font-size: calc(10px * var(--s)); color: #7a5cff; margin-left: calc(4px * var(--s)); }
+.rkS { font-weight: 900; font-variant-numeric: tabular-nums; }
+.rkF { font-size: calc(11px * var(--s)); opacity: 0.75; text-align: right; }
+.rkEmpty { font-size: calc(13px * var(--s)); opacity: 0.75; padding: calc(10px * var(--s)); text-align: center; }
+#rankMine { font-size: calc(14px * var(--s)); text-align: center; margin-top: calc(4px * var(--s)); color: #fff; min-height: 1.2em; }
+#rankNote { font-size: calc(11px * var(--s)); opacity: 0.75; text-align: center; word-break: keep-all; margin-top: calc(2px * var(--s)); }
+#rankPick .btns { margin-top: calc(6px * var(--s)); display: flex; justify-content: center; }
+#rankSsel { position: absolute; right: calc(-6px * var(--s)); bottom: calc(-8px * var(--s)); display: flex; flex-direction: column; align-items: flex-end; gap: calc(4px * var(--s)); max-width: 45%; }
+#rankSsel .sselImg { height: min(calc(64px * var(--s)), 16vh); }
+#rankSsel .gtxt { order: -1; width: max-content; max-width: calc(220px * var(--s)); }
+#rankSsel .gtxt span { font-size: calc(13px * var(--s)); }
+.atkB.rankB { --dc: #7a5cff; }
+#rNet { font-size: calc(14px * var(--s)); color: #fff; margin-top: calc(4px * var(--s)); word-break: keep-all; }
+
+/* 11-28 주민 던전 주인 초상 + 말풍선(입구 반김·끝 환호) */
+#resPop { position: absolute; right: calc(10px + env(safe-area-inset-right)); top: 31%; display: flex; align-items: center; gap: 8px; flex-direction: row-reverse; pointer-events: none; z-index: 30; max-width: min(78vw, 420px); }
+#resPop.hide { display: none; }
+#resPop .rpImg { flex: none; width: clamp(64px, 13vmin, 104px); height: clamp(64px, 13vmin, 104px); border-radius: 50%; overflow: hidden; border: 4px solid var(--ink, #1b1424); background: var(--rc, #fff); box-shadow: 0 4px 0 var(--ink, #1b1424); }
+#resPop .rpImg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#resPop .rpTxt { display: flex; flex-direction: column; background: #fff; color: var(--ink, #1b1424); border: 3px solid var(--ink, #1b1424); border-radius: 16px; box-shadow: 0 3px 0 var(--ink, #1b1424); padding: 8px 12px; font-weight: 800; font-size: clamp(13px, 2.6vmin, 18px); line-height: 1.25; word-break: keep-all; }
+#resPop .rpTxt b { color: var(--rc2, #e5352b); font-size: 0.85em; }
+#resPop.in { animation: rpIn 0.45s cubic-bezier(.2,1.6,.4,1); }
+#resPop.cheer .rpImg { animation: rpHop 0.5s ease-in-out infinite; }
+@keyframes rpIn { from { transform: translateX(40px) scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rpHop { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+body.closeup #resPop { top: 14%; }

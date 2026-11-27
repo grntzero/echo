@@ -105,6 +105,8 @@
       <div class="gtxt"><b>쎌</b><span id="gruntTxt"></span></div>
     </div>
     <div id="shelter" class="hide"></div>
+    <!-- 11-28 주민 던전 주인(포이·로키·킬라톤): 입구에서 반김 · 끝 환호 — 초상(시안4) + 말풍선 (그림만) -->
+    <div id="resPop" class="hide"><div class="rpImg"><img alt="" draggable="false" src=""></div><div class="rpTxt"><b></b><span></span></div></div>
   </div>
 
   <div id="banner" class="hide"><div class="inner ol"></div><div class="sub ol"></div></div>
@@ -121,7 +123,7 @@
       <div class="atkSeg" role="group" aria-label="주인공 고르기"><span class="atkL ol">주인공</span><button class="atkB" data-hero="sefo"><span class="ol">세포</span></button><button class="atkB gunner" data-hero="gunner"><span class="ol">허조교</span></button><button class="atkB moshee" data-hero="moshee"><span class="ol">모쉬</span></button><button class="atkB sseni" data-hero="sseni"><span class="ol">쎄니</span></button><button class="atkB berri" data-hero="berri"><span class="ol">베리</span></button></div>
       <div class="atkSeg" role="group" aria-label="함께 가는 친구 고르기"><span class="atkL ol">함께</span><button class="atkB" data-assist="none"><span class="ol">없음</span></button><button class="atkB sseni" data-assist="sseni"><span class="ol">쎄니</span></button><button class="atkB berri" data-assist="berri"><span class="ol">베리</span></button><span id="colRow" class="hide"><button id="colBtn" class="atkB" type="button" aria-label="카드 도감"><span class="ol">카드 0 / 1,040</span></button></span></div><!-- 11-25 카드 1단계: 도감 단추(연습 뒤에만 — 함께 줄 오른쪽, 줄을 더 늘리면 쎌 말풍선과 겹침) -->
       <!-- 11-24 던전 고르기(연습 뒤에만 보임): 지금 고른 던전·단계 → 누르면 창 -->
-      <div id="dunRow" class="atkSeg hide" role="group" aria-label="던전 고르기"><span class="atkL ol">던전</span><button id="dunBtn" class="atkB on" type="button"><span class="ol">방송 파이프 굴</span></button><span id="walRow" class="hide"><button id="walBtn" class="atkB" type="button" aria-label="톱니 지갑"><span class="ol">지갑 · 레벨 1 · 톱니 0</span></button></span></div><!-- 11-24 톱니 지갑 단추(같은 줄 — 줄을 더 늘리면 쎌 말풍선과 겹침) -->
+      <div id="dunRow" class="atkSeg hide" role="group" aria-label="던전 고르기"><span class="atkL ol">던전</span><button id="dunBtn" class="atkB on" type="button"><span class="ol">방송 파이프 굴</span></button><span id="walRow" class="hide"><button id="walBtn" class="atkB" type="button" aria-label="톱니 지갑"><span class="ol">지갑 · 레벨 1 · 톱니 0</span></button></span><span id="rankRow" class="hide"><button id="rankBtn" class="atkB rankB" type="button" aria-label="순위판"><span class="ol">순위판</span></button></span></div><!-- 11-27 카드 2단계 순위판 단추(js/net.js 서버 주소 있을 때만 보임) --><!-- 11-24 톱니 지갑 단추(같은 줄 — 줄을 더 늘리면 쎌 말풍선과 겹침) -->
     </div>
     <div id="atkPick" class="atkSeg" role="group" aria-label="소리 방울 자동 또는 수동">
       <span class="atkL ol">소리 방울</span>
@@ -142,6 +144,23 @@
       <div class="hrow autoOnly"><b>자동</b> 가까운 안개에 소리 방울이 저절로</div>
       <div class="hrow autoOnly"><b>비키며 음표 줍기</b>에 집중!</div>
       <div class="hrow"><b>「큰 소리」</b> 다 차면 꾹! <span class="pcOnly">(E)</span></div>
+    </div>
+  </div>
+
+  <!-- 11-27 카드 2단계 순위판(js/net.js 서버 모드): 일·주·월 탭 · 오늘의 3던전 · 로그인(보호자 계정 안내)·닉네임 · 기기 저장 옮기기 -->
+  <div id="rankPick" class="screen dim hide">
+    <div class="panel rankPanel">
+      <div class="ptitle ol">순위판</div>
+      <div id="rankLogin" class="rkBox hide"><button id="rankLoginBtn" class="bub yel" type="button"><span class="ol">로그인</span></button><div id="rankGsi"></div><small>14세 미만은 보호자 계정으로 · 저장하는 것: 계정 고유번호를 알아볼 수 없게 바꾼 값 · 닉네임 · 게임 기록 · 카드·톱니. 이름·이메일·사진·전화번호는 저장하지 않아요.</small></div>
+      <div id="rankMig" class="rkBox hide"><button id="rankMigGo" class="bub yel" type="button"><span class="ol">옮기기</span></button><button id="rankMigNo" class="bub sky" type="button"><span class="ol">새로 시작</span></button><small>이 기기의 카드·톱니·도장을 계정으로 한 번만 옮길 수 있어요.</small></div>
+      <div id="rankNick" class="rkBox hide"><input id="rankNickIn" type="text" maxlength="10" autocomplete="off" placeholder="닉네임 2~10자"><button id="rankNickBtn" class="bub yel" type="button"><span class="ol">정하기</span></button><small>한글·영문·숫자만 · 실제 이름·전화번호는 쓰지 않아요 · 7일에 한 번 바꿀 수 있어요</small></div>
+      <div id="rankToday"></div>
+      <div id="rankTabs" class="atkSeg" role="group" aria-label="순위 기간"><button class="atkB on" type="button" data-p="day"><span class="ol">오늘</span></button><button class="atkB" type="button" data-p="week"><span class="ol">이번 주</span></button><button class="atkB" type="button" data-p="month"><span class="ol">이번 달</span></button></div>
+      <div id="rankList"></div>
+      <div id="rankMine" class="ol"></div>
+      <div id="rankNote"></div>
+      <div class="btns"><button id="rankClose" class="bub sky" type="button"><span class="ol">닫기</span></button></div>
+      <div id="rankSsel" class="ssel"><div class="gtxt"><b>쎌</b><span id="rankSselTxt">순위판이야!</span></div><img class="sselImg" alt="" draggable="false" src="assets/img/assistant/ssel/basic.webp"></div>
     </div>
   </div>
 
@@ -224,6 +243,7 @@
       <div id="rStamp" class="ol hide"></div>
       <div id="rGear" class="hide"></div><!-- 11-24 받은 톱니(판·덤·첫 클리어 상자)·오늘 판 수 -->
       <div id="rCard" class="hide"></div><!-- 11-25 받은 카드(던전 주인 카드 1장 · 상자 카드)·오늘 카드 수 -->
+      <div id="rNet" class="ol hide"></div><!-- 11-27 서버 판: 「확인 중」 → 검산 뒤 결과(js/net.js) -->
       <div id="stars"><i class="st"></i><i class="st"></i><i class="st"></i></div>
       <div class="stats">
         <div class="srow"><span>걸린 시간</span><b id="rTime">0:00</b></div>
@@ -264,13 +284,16 @@
 <script src="js/pack_models.js"></script>
 <script src="js/pack_audio.js"></script>
 <script src="js/gzview.js"></script>
+<script src="js/net_config.js"></script><!-- 11-27 서버 주소(비어 있으면 1단계 그대로) -->
 <script src="js/util.js"></script>
 <script src="js/heroes.js"></script>
 <script src="js/dungeons.js"></script>
+<script src="js/dungeons_res.js"></script><!-- 11-28 주민 던전 3개 -->
 <script src="js/wallet.js"></script>
 <script src="js/collect.js"></script>
 <script src="js/render.js"></script>
 <script src="js/looks.js"></script>
+<script src="js/looks_res.js"></script><!-- 11-28 주민 던전 안개·보스 모양 -->
 <script src="js/audio.js"></script>
 <script src="js/assets.js"></script>
 <script src="js/haptics.js"></script>
@@ -278,13 +301,16 @@
 <script src="js/flowers.js"></script>
 <script src="js/arena.js"></script>
 <script src="js/maps.js"></script>
+<script src="js/maps_res.js"></script><!-- 11-28 주민 던전 맵 -->
 <script src="js/player.js"></script>
 <script src="js/assist.js"></script>
+<script src="js/resident.js"></script><!-- 11-28 주민 던전 주인 3D -->
 <script src="js/fogs.js"></script>
 <script src="js/wave.js"></script>
 <script src="js/cards.js"></script>
 <script src="js/unique.js"></script>
 <script src="js/hud.js"></script>
+<script src="js/net.js"></script><!-- 11-27 카드 2단계 서버 모드 이음(서버 주소 없으면 아무것도 안 함) -->
 <script src="js/game.js"></script>
 <div id="gzBeta" style="position:fixed;top:max(10px,env(safe-area-inset-top));z-index:99999;right:max(64px,calc(env(safe-area-inset-right) + 64px));max-width:min(44vw,420px);width:max-content;box-sizing:border-box;word-break:keep-all;background:rgba(13,10,6,.72);color:#fff;border-radius:12px;padding:4px 12px 5px;font:500 11.5px/1.45 -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;text-align:center;pointer-events:none;transition:opacity .3s;opacity:0;visibility:hidden"><div>🧪 <b>시험용(베타)</b> · 등급분류 전 시험 버전</div><button id="gzBetaMore" type="button" aria-expanded="false" style="pointer-events:auto;cursor:pointer;margin-top:1px;padding:0 9px;border:1px solid rgba(255,255,255,.55);border-radius:99px;background:rgba(255,255,255,.12);color:#fff;font:500 11.5px/1.45 -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;font-size:10.5px;line-height:1.6">ⓘ 자세히</button><div id="gzBetaBox" style="display:none;position:absolute;right:0;top:calc(100% + 6px);width:max-content;max-width:min(80vw,440px);box-sizing:border-box;text-align:left;pointer-events:auto;background:rgba(13,10,6,.92);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:8px 12px 9px;font:500 11.5px/1.45 -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;"><div>🧪 <b>시험용(베타 테스트)</b> — 등급분류 전 시험 버전입니다</div><div style="opacity:.9;margin-top:3px">설치·로그인 없이 브라우저에서 바로 · 기록은 이 기기에만 저장 · 시험 참가 최대 20,000명</div><div style="opacity:.9;margin-top:3px">⚠ 시험 기간(최대 60일)의 점수·기록·카드는 정식 오픈 때 모두 초기화됩니다 · 오류 제보 grnt@grntzero.com</div><button id="gzBetaClose" type="button" style="pointer-events:auto;cursor:pointer;display:block;margin:7px auto 0;padding:1px 14px;border:1px solid rgba(255,255,255,.55);border-radius:99px;background:rgba(255,255,255,.14);color:#fff;font:500 11.5px/1.45 -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;">닫기</button></div></div>
 <script>/*시험용 표시 11-16*/(function(){var e=document.getElementById("gzBeta"),m=document.getElementById("gzBetaMore"),x=document.getElementById("gzBetaBox"),c=document.getElementById("gzBetaClose");function ph(){try{return window.__tg&&__tg.state&&__tg.state().phase}catch(_){return null}}function tog(on){x.style.display=on?"block":"none";m.setAttribute("aria-expanded",on?"true":"false")}m.addEventListener("click",function(ev){ev.stopPropagation();tog(x.style.display==="none")});c.addEventListener("click",function(ev){ev.stopPropagation();tog(false)});setInterval(function(){var p=ph();var on=(p==="title");e.style.opacity=on?"1":"0";e.style.visibility=on?"visible":"hidden";if(!on)tog(false)},400)})();</script>

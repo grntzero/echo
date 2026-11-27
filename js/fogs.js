@@ -222,7 +222,16 @@
       transparent: true, depthWrite: false,
     }));
     band.visible = false; band.renderOrder = 4; band.frustumCulled = false; band.position.y = 0.09; scene.add(band);
-    F.bossObj = { group: bg2, mesh: boss, mat: bossMat, mats: { def: bossMat, cloud: bossMatCloud, tree: bossMatTree, gym: bossMatGym, drill: bossMatDrill, dark: bossMatDark }, mood: bossMood, pgr, parts, partsMat, partsSpin: true, shells, beads, band, spin: 0, bubS: [0, 0, 0], bubOn: [true, true, true], cap: [new T.Vector3(), new T.Vector3(), new T.Vector3()] };
+    const bossMats = { def: bossMat, cloud: bossMatCloud, tree: bossMatTree, gym: bossMatGym, drill: bossMatDrill, dark: bossMatDark };
+    // 11-28 주민 던전(js/looks_res.js): 보스 얼굴 재질은 모양 표의 bossFace = { var, mat: fogMat 값 } 로 — 새 변형 키일 때만 쓰임(지금 6던전 영향 0)
+    if (TG.LOOKS && TG.LOOKS.ids) for (const id of TG.LOOKS.ids()) { const bf = TG.LOOKS[id].bossFace; if (bf && bf.var && !bossMats[bf.var]) bossMats[bf.var] = fogMat(Object.assign({ sel: 'uMood', fUni: ' uniform float uMood;', uni: { uMood: bossMood } }, bf.mat)); }
+    // 11-28 POY 「볼륨 바늘 휙~」(sweep): 보스 둘레를 쓸고 가는 바늘 막대 2개(9단계는 반대편 하나 더) — 그 행동 때만 보임(그림만, 판정은 b.pat.ang)
+    const needle = new T.Group(); needle.visible = false; scene.add(needle);
+    { const nm = R.toon({ color: 0xf2f4fa, rim: 0.5, spec: 0.5, key: 'bossneedle' }); nm.vertexColors = true;
+      const ng = TG.LOOKS && TG.LOOKS._kit ? TG.LOOKS._kit.merge([TG.LOOKS._kit.P.box(0, 0.55, 4.9, [0.55, 0.32, 8.2], 0xf2f4fa), TG.LOOKS._kit.P.box(0, 0.58, 8.6, [0.75, 0.36, 1.0], 0x5fe08a), TG.LOOKS._kit.P.cyl(0, 0.55, 0.9, 0.55, 0.55, 0.5, 0xc8ccd8)], 0xffffff) : new T.BoxGeometry(0.55, 0.32, 9);
+      TG.R.addOutlineNormals(ng);
+      for (let i = 0; i < 2; i++) { const arm = new T.Group(), m = new T.Mesh(ng, nm); m.castShadow = true; needle.add(arm); arm.add(m); R.addOutline(m, 1.2); } } // 팔(Group)마다 몸 + 외곽선 — 팔을 돌림
+    F.bossObj = { group: bg2, mesh: boss, mat: bossMat, mats: bossMats, mood: bossMood, pgr, parts, partsMat, partsSpin: true, shells, beads, band, needle, spin: 0, bubS: [0, 0, 0], bubOn: [true, true, true], cap: [new T.Vector3(), new T.Vector3(), new T.Vector3()] };
     F.lookId = 'pipe'; F.setLevelLook(null);
     // 회색 고리 (좁혀 오는 구역)
     F.zone = makeZone(scene);
@@ -243,7 +252,7 @@
     swapGeo(F.bubbleMesh, c.bubble, { aFlash: F.bubbleFlash, aLook: F.bubbleLook, aVar: F.bubbleVar });
     swapGeo(F.echoMesh, c.echo, { aFlash: F.echoFlash, aLook: F.echoLook, aVar: F.echoVar });
     swapGeo(F.clumpMesh, c.clump, { aFlash: F.clumpFlash, aLook: F.clumpLook, aVar: F.clumpVar });
-    const o = F.bossObj; swapGeo(o.mesh, c.boss); swapGeo(o.parts, c.parts); o.partsSpin = L.spin !== false;
+    const o = F.bossObj; swapGeo(o.mesh, c.boss); swapGeo(o.parts, c.parts); o.partsSpin = L.spin !== false; o.pgr.position.set(0, 0, 0); o.pgr.rotation.set(0, 0, 0); o.pgr.scale.set(1, 1, 1); o.bossDraw = L.bossDraw || null; // 11-28 주민 던전 보스 몸짓 함수(그림만, looks_res.js) — 부품 자리·회전 초기화
     F.lookId = id; F.lookName = L.name;
     return id;
   };
@@ -361,7 +370,7 @@
   F.reset = function () {
     teles.forEach((q) => { q.on = false; q.m.visible = false; });
     F.list.length = 0; F.notes.length = 0; F.friends.length = 0; F.popped = 0;
-    F.boss = null; F.bossObj.group.visible = false; F.bossObj.beads.visible = false; F.bossObj.band.visible = false;
+    F.boss = null; F.bossObj.group.visible = false; F.bossObj.beads.visible = false; F.bossObj.band.visible = false; if (F.bossObj.needle) F.bossObj.needle.visible = false;
     F.zone.on = false; F.zone.a = 0; F.zone.plane.visible = false; F.zone.wall.visible = false;
     F.tickBeat = 0; uid = 1;
     cocoons.forEach((c) => { c.g.visible = false; });
@@ -622,6 +631,13 @@
           u.rdir += TG.clamp(TG.angDiff(u.rdir, want), -0.55 * dt, 0.55 * dt); // 천천히 주인공 쪽으로 틂(결국 도착)
           sx = Math.sin(u.rdir); sz = Math.cos(u.rdir); sp *= 1.15;
         }
+        // 11-28 주민 던전 걸음 6종(규칙, 난수 0 — 시간 t·박자 bph·자리만. 주민 던전만 씀 → 지금 6던전 영향 0): ratchet 딸깍 계단(반 박 나감·반 박 멈춤) · slide 옆으로 쭉 미끄러지다 방향 바꿈(접근 0.55 이상) · jump 두 박마다 크게 점프 + 착지 때 앞으로 쭉 · rail ㄱ자 선로(가로 먼저 → x 맞으면 세로) · orbit 나선 접근 · swing 덩굴 그네(좌우 진자 + 빠르기 출렁)
+        else if (wk === 'ratchet') { sp *= bph < 0.5 ? 2.0 : 0.0; }
+        else if (wk === 'slide') { const c = Math.floor((t + u.ph) / 1.2) % 2 ? 1 : -1, nx = sx * 0.55 - sz * 0.835 * c, nz = sz * 0.55 + sx * 0.835 * c; sx = nx; sz = nz; sp *= 1.22; }
+        else if (wk === 'jump') { const c = t % 1.0; sp *= c < 0.5 ? 0.6 : c < 0.8 ? 1.9 : 0.4; }
+        else if (wk === 'rail') { if (Math.abs(dx) > 0.9 && d > 1.4) { sx = dx > 0 ? 1 : -1; sz = 0; } else { sx = 0; sz = dz > 0 ? 1 : -1; } }
+        else if (wk === 'orbit') { const w = TG.clamp(d / 14, 0, 0.62), a = Math.max(0.6, Math.sqrt(1 - w * w)), s0 = u.id % 2 ? 1 : -1, nx = sx * a - sz * w * s0, nz = sz * a + sx * w * s0, nl = Math.hypot(nx, nz) || 1; sx = nx / nl; sz = nz / nl; sp *= 1.2; } // 11-28 1층 28~36초 띠에 맞춤(처음 0.82·×1.08 은 42~46초)
+        else if (wk === 'swing') { const w = Math.sin(t * 2.1 + u.ph) * 0.85, nx = sx - sz * w, nz = sz + sx * w, nl = Math.hypot(nx, nz) || 1; sx = nx / nl; sz = nz / nl; sp *= 1 + 0.38 * Math.sin(t * 4.2 + u.ph); }
         if (u.kind === 'clump') {
           u.dashT -= dt * u.slowK;
           if (u.dashT <= 0 && !u.dash && d < 10 && playing) { u.dash = 0.0001; u.sqT = 0.13; }
@@ -636,6 +652,8 @@
         const base = u.kind === 'clump' ? 0.12 : 0.95;
         if (u.line) u.y = TG.damp(u.y, base + Math.abs(Math.sin(t * Math.PI / 0.517)) * 0.42, 12, dt); // 11-24 허조교 줄 안개: 구령 박자(116 BPM = 0.517초)에 맞춰 통통 행진(그림 쪽 높이만)
         else if (wk === 'hop' && playing) u.y = TG.damp(u.y, base + Math.sin(Math.PI * bph) * 0.55, 14, dt); // 11-27 hop: 박자에 맞춰 뛰어오름(그림 쪽 높이만)
+        else if (wk === 'jump' && playing) { const c = t % 1.0; u.y = TG.damp(u.y, base + (c < 0.5 ? Math.sin(c / 0.5 * Math.PI) * 1.1 : 0), 16, dt); } // 11-28 LOKI 「다 같이 뛰어!」 크게 점프(그림 쪽 높이만)
+        else if (wk === 'ratchet' && playing) u.y = TG.damp(u.y, base + (bph < 0.5 ? 0.12 : 0), 20, dt); // 11-28 딸깍(그림만)
         else u.y = TG.damp(u.y, base + Math.sin(t * 2.6 + u.ph) * (u.kind === 'clump' ? 0.08 : 0.16), 6, dt);
         u.yaw += TG.angDiff(u.yaw, Math.atan2(dx, dz)) * (1 - Math.exp(-6 * dt));
         const hitR = u.r * u.scale + 0.5;
@@ -759,11 +777,19 @@
   // 11-27 보스 행동 3종 추가(규칙 — 난수 호출 수는 바탕 행동과 같게): call4 = 세포 「체조 구령 4박」(squeeze 예고 2초 = 4박) · horn3 = 허조교 「기상 나팔 3연타」(slam + 예고 원 2개 동시) · decoy = 모쉬 「거울 분신」(rain 에서 진짜 1 + 가짜 큐브). 말풍선은 던전표 rule.boss.words(그림만)
   function bossBegin(b, type, P) {
     const sk = b.spdK, hr = b.r * b.scale + 0.6, W = (b.cfg && b.cfg.words) || {}, say = (k, def) => { const w = W[k] || def; if (w) TG.FX.text(w, b.x, 5.6 * b.scale + 0.6, b.z, 'word'); };
-    if (type === 'roll' || type === 'rolls') {
-      const chain = type === 'rolls';
-      b.pat = { type: 'roll', left: chain ? 3 : 1, len: chain ? 14 : 17, bounce: b.phase >= 2 };
+    if (type === 'roll' || type === 'rolls' || type === 'rush' || type === 'rush3') { // 11-28 rush/rush3 = LOKI 기관차 돌진(roll/rolls 와 같은 규칙·난수 0, 그림만 기차가 앞을 봄)
+      const chain = type === 'rolls' || type === 'rush3', rush = type === 'rush' || type === 'rush3';
+      b.pat = { type: 'roll', left: chain ? 3 : 1, len: chain ? 14 : 17, bounce: b.phase >= 2, rush };
       rollAim(b, P, 0.8);
-      if (chain) say('rolls', '데굴데굴 세 번!'); else say('roll', null);
+      if (rush) say(type, chain ? '칙칙폭폭 세 번!' : '칙칙 돌진!'); else if (chain) say('rolls', '데굴데굴 세 번!'); else say('roll', null);
+    } else if (type === 'rail_rain') { // 11-28 LOKI 「말풍선 비」: 예고 원이 주인공을 지나는 가로 선로(x축) 위에 줄지어(rain 과 같은 난수 수 — 자리마다 TG.srr 2번)
+      const n = 3 + Math.min(2, b.phase), pre = 0.8 / sk, spots = [[P.x, P.z]];
+      if (b.phase >= 1) spots.push([P.x + P.vx * 0.7, P.z + P.vz * 0.7]);
+      while (spots.length < n) { const k = spots.length, sd = k % 2 ? 1 : -1, j = Math.ceil(k / 2); spots.push([P.x + sd * j * 2.8 + TG.srr(-0.4, 0.4), P.z + TG.srr(-0.3, 0.3)]); }
+      say('rail_rain', '말풍선 비!');
+      spots.forEach(([x, z], i) => bossDrop(b, TG.clamp(x, -18, 18), TG.clamp(z, -12, 12), pre + i * 0.12, i < 3, false));
+      b.pat = { type: 'rain', t: 0, end: pre + n * 0.12 + 0.3, rail: true };
+      b.sq = 0.2;
     } else if (type === 'rain' || type === 'decoy') { // 안개 비: SEFO 자리 + 가는 길 앞(2단계부터) + 둘레
       const decoy = type === 'decoy', n = 3 + Math.min(2, b.phase), pre = 0.8 / sk, spots = [[P.x, P.z]];
       if (b.phase >= 1) spots.push([P.x + P.vx * 0.7, P.z + P.vz * 0.7]);
@@ -774,13 +800,24 @@
       spots.forEach(([x, z], i) => bossDrop(b, TG.clamp(x, -18, 18), TG.clamp(z, -12, 12), pre + i * 0.12, decoy ? i === 0 : i < 3, decoy && i > 0)); // 거울 분신: 진짜(안개 나옴·아픔)는 첫 자리 하나, 나머지는 가짜 큐브
       b.pat = { type: 'rain', t: 0, end: pre + n * 0.12 + 0.3 };
       b.sq = 0.2;
-    } else if (type === 'slam' || type === 'horn3') {
+    } else if (type === 'slam' || type === 'horn3' || type === 'drum4') {
       const pre = 1.0 / sk, tx = TG.clamp(P.x, -16, 16), tz = TG.clamp(P.z, -10.5, 10.5);
       b.pat = { type: 'slam', t: 0, pre, sx: b.x, sz: b.z, tx, tz, done: false };
       F.tele('circle', tx, tz, { r: hr + 0.2, dur: pre + 0.16 });
-      if (type === 'horn3') { const la = Math.atan2(P.x - b.x, P.z - b.z); for (let i = 1; i <= 2; i++) bossDrop(b, TG.clamp(P.x + Math.sin(la) * i * 3.0, -18, 18), TG.clamp(P.z + Math.cos(la) * i * 3.0, -12, 12), pre + 0.16 + i * 0.1, false); say('horn3', '나팔 3연타!'); } // 기상 나팔 3연타: 쿵 + 앞쪽으로 예고 원 2개(난수 0)
+      if (type === 'drum4') { // 11-28 KILLATON 「둥·둥·둥·둥 떼창!」: 쿵 뒤 주인공 둘레 동서남북 4곳(±3.2 고정)에 차례로 — 9단계는 대각선 4곳 더(8곳). 추가 난수 0
+        const four = [[0, -1], [1, 0], [0, 1], [-1, 0]], diag = [[0.71, -0.71], [0.71, 0.71], [-0.71, 0.71], [-0.71, -0.71]], gap = 0.26 / sk;
+        four.forEach(([ox, oz], i) => bossDrop(b, TG.clamp(P.x + ox * 3.2, -18, 18), TG.clamp(P.z + oz * 3.2, -12, 12), pre + 0.16 + i * gap, false));
+        if (b.lv >= 9) diag.forEach(([ox, oz], i) => bossDrop(b, TG.clamp(P.x + ox * 4.4, -18, 18), TG.clamp(P.z + oz * 4.4, -12, 12), pre + 0.16 + (4 + i) * gap, false));
+        say('drum4', '둥·둥·둥·둥!'); b.pat.drum4 = b.lv >= 9 ? 8 : 4;
+      } else if (type === 'horn3') { const la = Math.atan2(P.x - b.x, P.z - b.z); for (let i = 1; i <= 2; i++) bossDrop(b, TG.clamp(P.x + Math.sin(la) * i * 3.0, -18, 18), TG.clamp(P.z + Math.cos(la) * i * 3.0, -12, 12), pre + 0.16 + i * 0.1, false); say('horn3', '나팔 3연타!'); } // 기상 나팔 3연타: 쿵 + 앞쪽으로 예고 원 2개(난수 0)
       else say('slam', null);
       b.sq = 0.2;
+    } else if (type === 'sweep') { // 11-28 POY 「볼륨 바늘 휙~」: squeeze 와 같은 난수 수(TG.srr 1번 = 시작 각). 바늘(길이 9)이 보스 둘레를 한 바퀴(3.2초/단계 배율) — 예고 0.9초 동안 바늘 자리 줄. 9단계는 반대편 바늘 하나 더
+      const pa = Math.atan2(P.x - b.x, P.z - b.z), g = TG.srr(0.78, 1.02), a0 = pa + g * 2.0, two = b.lv >= 9;
+      b.pat = { type: 'sweep', t: 0, pre: 0.9 / sk, dur: 3.2 / sk, cx: b.x, cz: b.z, a0, ang: a0, pang: a0, len: 9, two };
+      F.tele('line', b.x, b.z, { dir: a0, len: 9.4, w: 1.3, dur: b.pat.pre }); if (two) F.tele('line', b.x, b.z, { dir: a0 + Math.PI, len: 9.4, w: 1.3, dur: b.pat.pre });
+      say('sweep', '볼륨 바늘 휙~!');
+      TG.A.play('sfx_steam', { gain: 0.45, rate: 1.1 });
     } else { // 'squeeze' | 'combo' | 'call4'
       const pa = Math.atan2(P.x - b.x, P.z - b.z), g = TG.srr(0.78, 1.02), call4 = type === 'call4';
       const R1 = b.r * b.scale * 0.9, R0 = TG.clamp(Math.hypot(P.x - b.x, P.z - b.z) + 3, 7.5, 12); // 늘 SEFO 조금 바깥에서 시작(화면 안에 보이게)
@@ -872,6 +909,16 @@
             }
           }
         } else { b.y = 0.3; if (pt.t > pt.pre + 0.16 + 0.55) b.pat = null; }
+      } else if (b.pat.type === 'sweep') { // 11-28 POY 바늘 쓸기: 예고 → 한 바퀴. 바늘(보스 가운데에서 길이 9, 폭 약 1.1)에 닿으면 1칸 — 바늘 반대편으로 걸어 피함
+        const pt = b.pat; pt.t += dt; pt.pang = pt.ang;
+        b.y = TG.damp(b.y, 0.3, 8, dt); b.x = pt.cx; b.z = pt.cz;
+        if (pt.t < pt.pre) b.sq = 0.1 * (Math.sin(pt.t * 26) > 0 ? 1 : 0.4);
+        else {
+          const k = Math.min(1, (pt.t - pt.pre) / pt.dur); pt.ang = pt.a0 + k * 6.2832;
+          const px = P.x - pt.cx, pz = P.z - pt.cz, pd = Math.hypot(px, pz);
+          if (!hold && pd > 0.8 && pd < pt.len + 0.4) { const pa = Math.atan2(px, pz), w = Math.atan2(0.75, pd); if (Math.abs(TG.angDiff(pt.ang, pa)) < w || (pt.two && Math.abs(TG.angDiff(pt.ang + Math.PI, pa)) < w)) { const h = P.hurt(pt.cx + px * 0.6, pt.cz + pz * 0.6); if (h) G.onHurt(b, h); } }
+          if (k >= 1) { b.pat = null; b.sq = 0.2; TG.FX.popBurst(b.x, 1.2, b.z, 1.0); }
+        }
       } else if (b.pat.type === 'squeeze') { // 고리 조이기: 구슬 고리가 머리 위로 퍼졌다(예고) → 바닥에 내려와 조여 옴. 틈 3곳으로 빠져나감
         const pt = b.pat; pt.t += dt; pt.pr = pt.r;
         b.y = TG.damp(b.y, 0.3 + Math.sin(t * 1.6) * 0.15, 6, dt);
@@ -980,6 +1027,7 @@
         else if (v === 'cloud') { o.group.rotation.z += Math.sin(t * 1.3) * 0.07; o.group.position.y += Math.sin(t * 1.3) * 0.12; } // 11-27 미러볼: 줄에 매달려 좌우로 흔들
         else if (v === 'tree') { o.group.rotation.z += Math.sin(t * 0.9) * 0.035; o.group.rotation.x += Math.sin(t * 0.6) * 0.02; }
       }
+      if (b.pat && b.pat.type === 'roll' && b.pat.rush) { o.group.rotation.y = TG.damp(o.group.rotation.y, b.pat.dir, 12, dt); o.group.rotation.x = 0; } // 11-28 LOKI 기관차: 돌진 땐 달리는 쪽을 봄(굴러 기우뚱 X)
       const fl = Math.max(Math.max(0, b.flash - 0.3) * 0.5, b.state === 'fight' && b.inv > 0 ? 0.22 + 0.16 * Math.sin(t * 22) : 0); // 맞을 때는 0.1초·밝기만 살짝 / // 단계 전환 멈칫 동안은 깜빡깜빡(안 맞는 때)
       o.mat.userData.flash.value = fl; // 밝은 보라로 약하게 (SEFO를 덮지 않게)
       // 단계 겉모습 (규칙 값 b.phase 를 읽기만 함): 표정 · 고리 조임 빠르기 · 남은 음표 방울 수
@@ -989,6 +1037,9 @@
       o.spin += dt * (0.6 + ph * 0.45);
       const tight = 1 - 0.08 * (0.5 + 0.5 * Math.sin(t * (1.5 + ph * 0.9)));
       o.pgr.rotation.y = o.partsSpin === false ? 0 : o.spin; o.pgr.scale.set(tight, 1, tight); // 11-24 베리 나무 줄기·열매는 돌지 않음(looks.js spin:false)
+      if (o.bossDraw) o.bossDraw(o, b, t, dt, ph); // 11-28 주민 던전 보스 몸짓(js/looks_res.js — 딸깍 다이얼·기관차 피스톤·북 꽃잎, 그림만)
+      { const sw = b.state === 'fight' && b.pat && b.pat.type === 'sweep' ? b.pat : null; o.needle.visible = !!sw; // 11-28 POY 바늘(규칙 값 b.pat.ang 을 읽기만)
+        if (sw) { const pre = sw.t < sw.pre, a = pre ? sw.a0 : L(sw.pang, sw.ang, al); o.needle.position.set(sw.cx, 0, sw.cz); o.needle.children[0].rotation.y = a; o.needle.children[1].rotation.y = a + Math.PI; o.needle.children[1].visible = !!sw.two; const s = pre ? 0.55 + 0.45 * Math.min(1, sw.t / sw.pre) : 1; o.needle.scale.set(1, pre ? 0.6 + 0.4 * (Math.sin(t * 24) > 0 ? 1 : 0) : 1, s); } }
       o.group.updateMatrixWorld(true);
       const remain = b.state === 'dying' ? 0 : 3 - ph;
       for (let i = 0; i < 3; i++) {
@@ -1076,7 +1127,7 @@
       tmpM.compose(tmpP.set(ux, uy, uz), tmpQ, tmpS.set(s * sx, s * sy, s * sx));
       const lkx = TG.clamp(Math.sin(la) * 1.5, -1, 1), lky = TG.clamp(-Math.cos(la), -0.25, 1) * 0.8 - 0.1, ph = (u.id * 0.371) % 1;
       const put = (mesh, flash, look, i, w) => { mesh.setMatrixAt(i, tmpM); flash.array[i] = fl; const a = look.array; a[i * 4] = lkx; a[i * 4 + 1] = lky; a[i * 4 + 2] = ph; a[i * 4 + 3] = w; };
-      const vary = (attr, i) => { const fv = hsh(u.id, 3); attr.array[i * 2] = u.paint > 0 || u.mistT > 0 ? 3 : u.mirror ? 4 : u.dark ? 5 : u.slow ? 6 : u.seed ? 7 : Math.floor(hsh(u.id, 2) * 3); attr.array[i * 2 + 1] = u.dark ? 1 : fv < 0.5 ? 0 : fv < 0.8 ? 1 : 2; }; // 색조 3단(+물든 보라 3) · 표정 3종 (id 해시)
+      const vary = (attr, i) => { const fv = hsh(u.id, 3); attr.array[i * 2] = u.paint > 0 || u.mistT > 0 ? 3 : u.mirror || u.bub ? 4 : u.dark ? 5 : u.slow ? 6 : u.seed ? 7 : Math.floor(hsh(u.id, 2) * 3); attr.array[i * 2 + 1] = u.dark ? 1 : fv < 0.5 ? 0 : fv < 0.8 ? 1 : 2; }; // 색조 3단(+물든 보라 3) · 표정 3종 (id 해시)
       if (u.kind === 'bubble') { vary(F.bubbleVar, nb); put(F.bubbleMesh, F.bubbleFlash, F.bubbleLook, nb, 0); nb++; pushShadow(ux, uz, 1.6 * s); }
       else if (u.kind === 'echo') { put(F.echoMesh, F.echoFlash, F.echoLook, ne, u.shield ? 1 : 0); ne++; pushShadow(ux, uz, 1.8 * s); }
       else { vary(F.clumpVar, nc); put(F.clumpMesh, F.clumpFlash, F.clumpLook, nc, 0); nc++; pushShadow(ux, uz, 3.0 * s); }

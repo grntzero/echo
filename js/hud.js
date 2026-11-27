@@ -12,7 +12,8 @@
       'dunRow', 'dunBtn', 'dunPick', 'dunList', 'lvRow', 'lvInfo', 'dunGo', 'cuSkipBtn', 'rStamp',
       'walRow', 'walBtn', 'walPick', 'walList', 'walClose', 'walLvN', 'walDay', 'walNote', 'rGear', 'walLvBox', 'walNeed', 'walUp', 'walAb', 'walJump', 'walJumpN', 'sselJump', 'sselJumpTxt', // 11-25 톱니 레벨(올리기·4능력·도약 연출)
       'colRow', 'colBtn', 'colPick', 'colTotal', 'colEq', 'colTabs', 'colSet', 'colGrid', 'colNote', 'colClose', 'cardView', 'cvArt', 'cvName', 'cvInfo', 'cvSlots', 'cvBtns', 'cvMsg', 'cvClose', 'rCard',
-      'btnStar', 'starArc', 'starLbl'].forEach((k) => (H[k] = $(k))); // 11-24 던전 고르기·확대 건너뛰기·단계 도장 · 톱니 지갑 · 11-25 카드 도감 · 11-25 유니크 ★ 버튼
+      'btnStar', 'starArc', 'starLbl',
+      'rankRow', 'rankBtn', 'rankPick', 'rankLogin', 'rankLoginBtn', 'rankGsi', 'rankMig', 'rankMigGo', 'rankMigNo', 'rankNick', 'rankNickIn', 'rankNickBtn', 'rankToday', 'rankTabs', 'rankList', 'rankMine', 'rankClose', 'rankSsel', 'rankSselTxt', 'rankNote', 'rNet'].forEach((k) => (H[k] = $(k))); // 11-27 카드 2단계 순위판(js/net.js) // 11-24 던전 고르기·확대 건너뛰기·단계 도장 · 톱니 지갑 · 11-25 카드 도감 · 11-25 유니크 ★ 버튼
     H.dunBtn.addEventListener('click', (e) => { e.stopPropagation(); TG.A.unlock(); TG.A.ui(1.1); H.dunOpen(); });
     H.dunGo.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.1); H.dunClose(); });
     H.dunPick.addEventListener('click', (e) => { if (e.target === H.dunPick) H.dunClose(); });
@@ -21,6 +22,16 @@
     H.walPick.addEventListener('click', (e) => { if (e.target === H.walPick) H.walClose_(); });
     if (H.walUp) H.walUp.addEventListener('click', (e) => { e.stopPropagation(); TG.A.unlock(); H.walUp_(); }); // 11-25 톱니 레벨 올리기
     if (H.walJump) H.walJump.addEventListener('click', (e) => { e.stopPropagation(); H.walJumpHide(); });
+    if (H.rankBtn) { // 11-27 순위판(서버 모드)
+      H.rankBtn.addEventListener('click', (e) => { e.stopPropagation(); TG.A.unlock(); TG.A.ui(1.1); H.rankOpen(); });
+      H.rankClose.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.1); H.rankClose_(); });
+      H.rankPick.addEventListener('click', (e) => { if (e.target === H.rankPick) H.rankClose_(); });
+      H.rankTabs.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); rankPeriod = b.dataset.p; H.rankRender(); }));
+      H.rankLoginBtn.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); H.rankLogin_(); });
+      H.rankNickBtn.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); H.rankNick_(); });
+      H.rankMigGo.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); TG.net.migrate().then(() => { H.rankSay('옮겼어! 카드·톱니 그대로야~', 'cheer'); H.rankRender(); }).catch(() => { H.rankSay('지금은 못 옮겼어. 나중에 다시 해 보자!', 'bow'); H.rankRender(); }); });
+      H.rankMigNo.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); TG.net.skipMigrate(); TG.net.refresh(); H.rankRender(); });
+    }
     if (H.colBtn) { // 11-25 카드 도감
       H.colBtn.addEventListener('click', (e) => { e.stopPropagation(); TG.A.unlock(); TG.A.ui(1.1); H.colOpen(); });
       H.colClose.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.1); H.colClose_(); });
@@ -82,7 +93,17 @@
     if (H.dunRow) { H.show(H.dunRow, tut); H.dunBtn.querySelector('span').textContent = hubNext; H.dunBtn.style.setProperty('--dc', d.color || '#e5352b'); }
     if (H.walRow && TG.W) { H.show(H.walRow, tut); H.walBtn.querySelector('span').textContent = '지갑 · 레벨 ' + TG.W.data.lvl + ' · 톱니 ' + TG.W.total(); } // 11-24 톱니 지갑 줄(연습 뒤에만)
     if (H.colRow && TG.K) { H.show(H.colRow, tut); H.colBtn.querySelector('span').textContent = '카드 ' + TG.K.total() + ' / ' + TG.K.TOTAL.toLocaleString('en-US'); } // 11-25 카드 도감 단추(연습 뒤에만)
+    if (H.rankRow) { const n = TG.net; H.show(H.rankRow, tut && !!(n && n.on)); if (n && n.on) H.rankBtn.querySelector('span').textContent = n.active() ? '순위판' + (n.me && n.me.nick ? ' · ' + n.me.nick : '') : '순위판 · 로그인'; } // 11-27 순위판 단추(서버 주소 있을 때만 — 없으면 1단계 그대로)
     void L;
+  };
+  // 11-28 주민 던전 주인 초상 + 말풍선(그림만 — 규칙·기록과 무관). id = poy|loki|killaton, cheer = 끝 환호(통통 뜀)
+  H.resSay = function (id, name, text, cheer, sec, col) {
+    const el = document.getElementById('resPop'); if (!el) return;
+    if (!id) { el.classList.add('hide'); H.resSayT = 0; return; }
+    el.querySelector('img').src = 'assets/img/resident/' + id + '.webp'; el.querySelector('b').textContent = name; el.querySelector('span').textContent = text;
+    el.style.setProperty('--rc', '#fff'); el.style.setProperty('--rc2', col || '#e5352b');
+    el.classList.remove('hide', 'in'); void el.offsetWidth; el.classList.add('in'); el.classList.toggle('cheer', !!cheer);
+    clearTimeout(H.resSayTo); H.resSayT = 1; H.resSayTo = setTimeout(() => { el.classList.add('hide'); H.resSayT = 0; }, (sec || 3.5) * 1000);
   };
   H.dunOpen = function () {
     if (!H.title || H.title.classList.contains('hide')) return false;
@@ -181,6 +202,71 @@
   // ── 11-25 카드 1단계(js/collect.js): 도감 80칸 · 장착 · 세트 · 상세(장착·올리기·바꾸기) ──
   let colArtist = 'sefo', cvId = null;
   const pctTx = (v) => '+' + (Math.round(v * 10) / 10) + '%';
+  // ── 11-27 카드 2단계 순위판(js/net.js): 일·주·월 탭 · 오늘의 3던전·남은 횟수·「끝까지 모드 가기」 · 로그인·닉네임(보호자 계정 안내) · 기기 저장 옮기기 ──
+  let rankPeriod = 'day', rankBusy = false;
+  H.rankSay = function (t, face) { if (H.rankSselTxt) H.rankSselTxt.textContent = t; if (H.rankSsel) H.sselFace(H.rankSsel, face || 'basic', true); };
+  H.rankOpen = function () {
+    if (!H.title || H.title.classList.contains('hide') || !TG.net || !TG.net.on) return false;
+    H.rankRender(); H.show(H.rankPick, true); return true;
+  };
+  H.rankClose_ = function () { H.show(H.rankPick, false); H.hubRefresh(hubTut, hubBack); };
+  H.rankLogin_ = function () {
+    const n = TG.net;
+    if (n.info && n.info.dev) { const name = W_prompt('시험용 이름(영문·숫자 2~24자)'); if (!name) return; n.login(name).then(() => { H.rankSay(n.canMigrate ? '이 기기 카드·톱니를 계정으로 옮길까?' : '로그인 끝! 닉네임을 정해 줘~', 'smile'); H.rankRender(); }).catch((e) => H.rankSay((e.info && e.info.message) || '로그인이 안 됐어. 다시 해 볼까?', 'bow')); return; }
+    if (!n.showGoogleButton(H.rankGsi, (tok) => n.login({ idToken: tok, ageAck: true }).then(() => { H.rankSay(n.canMigrate ? '이 기기 카드·톱니를 계정으로 옮길까?' : '로그인 끝! 닉네임을 정해 줘~', 'smile'); H.rankRender(); }).catch((e) => H.rankSay((e.info && e.info.message) || '로그인이 안 됐어. 다시 해 볼까?', 'bow')))) H.rankSay('로그인은 아직 준비 중이야. 이 기기 저장으로 놀 수 있어!', 'ok');
+  };
+  const W_prompt = (t) => { try { return window.prompt(t) || ''; } catch (e) { return ''; } };
+  H.rankNick_ = function () {
+    const v = (H.rankNickIn.value || '').trim(); if (!v) return;
+    TG.net.setNick(v).then((j) => { H.rankSay('「' + j.nick + '」 좋은 이름이야!', 'cheer'); H.rankRender(); }).catch((e) => H.rankSay((e.info && e.info.message) || '다른 닉네임을 써 줘!', 'bow'));
+  };
+  H.rankGo = function (dun) {
+    if (rankBusy) return; rankBusy = true;
+    TG.net.startRun('rank', dun).then(() => { rankBusy = false; H.show(H.rankPick, false); TG.net.go(); }).catch((e) => { rankBusy = false; H.rankSay((e.info && e.info.message) || '지금은 못 가. 잠깐 뒤에 다시!', 'bow'); H.rankRender(); });
+  };
+  H.rankRender = function () {
+    const n = TG.net; if (!n || !n.on || !H.rankPick) return;
+    const logged = n.active(), me = n.me;
+    H.show(H.rankLogin, !logged); H.show(H.rankMig, logged && !!n.canMigrate); H.show(H.rankNick, logged && !n.canMigrate && !!(me && me.needNick));
+    if (!logged) H.rankSay('순위판에 오르려면 로그인이 필요해! 14세 미만은 보호자 계정으로 해 줘~', 'basic');
+    else if (n.canMigrate) H.rankSay('이 기기 카드·톱니를 계정으로 옮길까? 한 번만 할 수 있어!', 'smile');
+    else if (me && me.needNick) H.rankSay('닉네임을 정해 줘! 실제 이름·전화번호는 쓰지 마~', 'smile');
+    // 오늘의 3던전 + 남은 횟수 + 가기
+    const rk = (me && me.rank) || (n.info && n.info.rank) || null;
+    if (rk && H.rankToday) {
+      let h = '<div class="rkHead"><b>오늘의 3던전</b><small>' + rk.date + ' · ' + TG.LEVELS[rk.lv].name + ' 단계 · 던전마다 하루 ' + ((n.info && n.info.rank && n.info.rank.triesPerDun) || 5) + '번</small></div><div class="rkDuns">';
+      rk.duns.forEach((id, i) => { const d = TG.DUNGEONS[id]; const left = rk.tries ? rk.tries[id] : null; h += '<button type="button" class="dunB rkD' + (logged && left === 0 ? ' lock' : '') + '" data-dun="' + id + '" style="--dc:' + d.color + '"><i></i><span class="tx"><b>' + (i + 1) + '. ' + d.name + '</b><small>' + d.ownerName + ' 던전' + (left == null ? '' : ' · 남은 ' + left + '번') + '</small></span></button>'; });
+      H.rankToday.innerHTML = h + '</div>';
+      H.rankToday.querySelectorAll('.rkD').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); if (!logged) { H.rankSay('먼저 로그인해 줘!', 'ok'); return; } if (me && me.needNick) { H.rankSay('닉네임 먼저!', 'ok'); return; } if (b.classList.contains('lock')) { H.rankSay('이 던전은 오늘 다 했어! 내일 06시에 또 하자~', 'ok'); return; } H.rankGo(b.dataset.dun); }));
+    }
+    H.rankTabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.p === rankPeriod));
+    H.rankList.innerHTML = '<div class="rkEmpty">불러오는 중…</div>'; H.rankMine.textContent = '';
+    n.board(rankPeriod).then((j) => {
+      if (!j.rows.length) { H.rankList.innerHTML = '<div class="rkEmpty">' + (rankPeriod === 'day' ? '아직 오늘 기록이 없어. 첫 번째가 돼 볼까?' : '아직 기록이 없어.') + '</div>'; }
+      else H.rankList.innerHTML = j.rows.map((r) => '<div class="rkRow' + (r.me ? ' me' : '') + '"><span class="rkN">' + r.rank + '</span><span class="rkNick">' + esc(r.nick) + '<i class="rkLv">Lv.' + r.lvl + '</i>' + (r.title ? '<i class="rkT">' + esc(r.title) + '</i>' : '') + '</span><span class="rkS">' + r.score.toLocaleString('en-US') + '</span><span class="rkF">' + (r.finished ? '완주' : r.legs + '/3') + '</span></div>').join('');
+      H.rankMine.textContent = j.me ? '내 순위 ' + j.me.rank + '위 · ' + j.me.score.toLocaleString('en-US') + '점' + (j.me.finished ? ' · 완주!' : '') : (logged ? (j.pending ? j.note : '아직 내 기록이 없어') : '');
+      if (H.rankNote) H.rankNote.textContent = (rankPeriod === 'day' ? '오늘 = 3던전 각각 최고 점수의 합' : rankPeriod === 'week' ? '이번 주 = 월~일 7일 중 잘한 5일의 합' : '이번 달 = 매일 점수를 모두 더함') + ' · 모두 표준 수치 + 카드 능력치(합계 상한) · 레벨 효과 없음 · 보상은 ' + (rankPeriod === 'day' ? '다음 날' : rankPeriod === 'week' ? '월요일' : '1일') + ' 06시';
+    }).catch(() => { H.rankList.innerHTML = '<div class="rkEmpty">순위판을 못 불러왔어. 잠깐 뒤에 다시!</div>'; });
+  };
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // 06시 보상 선물함(서버 inbox) — 광장 쎌 말풍선 한 번
+  H.rankGift = function (inbox) {
+    const g = inbox[inbox.length - 1]; if (!g) return;
+    const t = (g.title ? '칭호 「' + g.title + '」! ' : '') + (g.cards && g.cards.length ? '카드 ' + g.cards.length + '장! ' : '') + (g.gear ? '톱니도! ' : '');
+    const tx = $('sselTitleTxt'), box = $('sselTitle'); if (tx) { tx.textContent = '선물 도착! ' + t + '순위판을 확인해 봐~'; if (box) H.sselFace(box, 'cheer', true); }
+  };
+  // 결과 화면: 서버 판은 「확인 중」 → 검산 뒤 받은 것(톱니·카드·점수)으로 갱신
+  H.netPending = function (run, msg) { if (!H.rNet) return; H.show(H.rNet, true); H.rNet.textContent = msg || '기록 확인 중이야, 곧 올라갈 거야~'; };
+  H.netResult = function (r) {
+    if (!H.rNet || !H.lastRes) return;
+    const R = H.lastRes;
+    if (r.status === 'verified') {
+      const rw = r.reward || {};
+      if (R.net && R.net.mode === 'rank') H.rNet.textContent = '확인 끝! ' + (r.score ? r.score.toLocaleString('en-US') + '점 — 순위판에 올라갔어!' : '쓰러졌지만 톱니는 챙겼어! 다시 해 보자~');
+      else { H.rNet.textContent = '확인 끝! 받은 것이 들어왔어~'; R.gear = rw.gear || null; R.card = rw.card || null; R.fall = rw.fall || null; if (rw.stamp) R.stamp = Object.assign(R.stamp || {}, rw.stamp, { nextName: rw.stamp.next ? TG.LEVELS[rw.stamp.next].name : null }); H.renderReward(R); }
+    } else H.rNet.textContent = '이 기록은 올릴 수 없었어. 다음 판에 또 해 보자!';
+  };
+
   H.colOpen = function (artist) {
     if (!H.title || H.title.classList.contains('hide') || !TG.K) return false;
     if (artist && TG.K.byId[artist]) colArtist = artist;
@@ -544,7 +630,7 @@
     c.setTransform(H.map.width / W, 0, 0, H.map.height / Hh, 0, 0);
     const AR = TG.AR, sx = W / (AR.W + 2), sz = Hh / (AR.D + 2);
     const X = (x) => W / 2 + x * sx, Z = (z) => Hh / 2 + z * sz;
-    { const id = (AR.mapId && MAPBG[AR.mapId]) ? AR.mapId : 'pipe'; H.mapStyle = id; MAPBG[id](c, X, Z, sx, sz, W, Hh); } // 11-24 던전별 미니맵 바탕(그림만)
+    { if (TG.MAPBG_RES) { Object.assign(MAPBG, TG.MAPBG_RES); TG.MAPBG_RES = null; } const id = (AR.mapId && MAPBG[AR.mapId]) ? AR.mapId : 'pipe'; H.mapStyle = id; MAPBG[id](c, X, Z, sx, sz, W, Hh); } // 11-24 던전별 미니맵 바탕(그림만) · 11-28 주민 던전 바탕은 js/maps_res.js 가 TG.MAPBG_RES 에 넣음
     // 회색 고리
     const zn = TG.F.zone;
     if (zn.on) {
@@ -611,6 +697,17 @@
       if (r.clear && st) H.rStamp.textContent = r.dungeonName + ' · ' + r.lvName + ' 도장!' + (st.first && st.nextName ? ' 다음 「' + st.nextName + '」 열림' : st.first ? ' 금 도장!' : '') + (st.box && !r.gear ? '\n첫 클리어 상자: ' + st.box : ''); // 11-24 지갑 지급이 있으면 상자 내용은 아래 「받은 톱니」 줄에(아이콘) — 두 번 안 적음
       else if (r.clear) H.rStamp.textContent = r.dungeonName + ' · ' + r.lvName + ' 도장!';
     }
+    H.lastRes = r; H.renderReward(r);
+    if (H.rNet) { H.show(H.rNet, !!r.net); if (r.net) H.rNet.textContent = (TG.net && TG.net.say && TG.net.say.pending) || '기록 확인 중이야, 곧 올라갈 거야~'; } // 11-27 서버 판: 톱니·카드·점수는 검산 뒤(js/net.js) — 그동안 「확인 중」
+    H.rTime.textContent = TG.fmtTime(r.time);
+    H.rFog.textContent = r.fogs;
+    H.rCombo.textContent = r.combo;
+    H.rNote.textContent = r.notes;
+    { const m = document.getElementById('rMode'); if (m) { m.textContent = r.atk === 'mixed' ? '자동 (일부)' : '자동'; H.show(m, r.atk === 'auto' || r.atk === 'mixed'); } } // 소리 방울 자동으로 한 판이면 표시
+    H.showResult2(r);
+  };
+  // 받은 톱니·카드 줄(결과 화면) — 11-27 서버 판은 검산 뒤 H.netResult 가 다시 부름
+  H.renderReward = function (r) {
     if (H.rGear) { // 11-24 받은 톱니(js/wallet.js payout): 판 톱니(+덤) · 첫 클리어 상자 · 오늘 판 수(8판 뒤 30%)
       const pg = r.clear ? r.gear : r.fall; H.show(H.rGear, !!pg); document.body.classList.toggle('hasGear', !!pg); // 11-25 쓰러져도 챙긴 톱니(r.fall)도 같은 줄
       if (pg && pg.fall) { const W = TG.W; H.rGear.innerHTML = '<div class="gl"><span class="gk">챙긴 톱니</span>' + W.html(pg.run) + '<span class="gtag tagFall">' + pg.reached + ' / ' + pg.of + '층 · ' + pg.pct + '%</span>' + (pg.over ? '<span class="gtag">30%</span>' : '') + '</div>'; }
@@ -627,11 +724,8 @@
         h += '<span class="gday">' + ((r.atk === 'auto' || r.atk === 'mixed') ? '<i class="rcMode">' + (r.atk === 'mixed' ? '자동 (일부)' : '자동') + '</i> · ' : '') + '오늘 ' + pc.dayN + ' / ' + pc.dayMax + '장</span>'; // 카드 줄이 있으면 「자동」 꼬리표(#rMode)는 CSS 로 숨기고 여기 한 줄에
         H.rCard.innerHTML = h; }
     }
-    H.rTime.textContent = TG.fmtTime(r.time);
-    H.rFog.textContent = r.fogs;
-    H.rCombo.textContent = r.combo;
-    H.rNote.textContent = r.notes;
-    { const m = document.getElementById('rMode'); if (m) { m.textContent = r.atk === 'mixed' ? '자동 (일부)' : '자동'; H.show(m, r.atk === 'auto' || r.atk === 'mixed'); } } // 소리 방울 자동으로 한 판이면 표시
+  };
+  H.showResult2 = function (r) {
     const st = Array.from(H.stars.children);
     st.forEach((e) => { e.className = 'st'; });
     H.show(H.result, true);

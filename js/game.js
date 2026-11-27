@@ -103,7 +103,7 @@
       .then(async () => {
         const sc = TG.R.scene;
         const rest = () => new Promise((r) => { let d = false; const f = () => { if (!d) { d = true; r(); } }; requestAnimationFrame(f); setTimeout(f, 80); });
-        const steps = [() => TG.AR.build(sc), () => TG.FX.init(sc), () => TG.PL.init(sc), () => TG.F.init(sc), () => { TG.WV.init(sc); TG.C.init(sc); TG.FL.init(sc); TG.AS.init(sc); },
+        const steps = [() => TG.AR.build(sc), () => TG.FX.init(sc), () => TG.PL.init(sc), () => TG.F.init(sc), () => { TG.WV.init(sc); TG.C.init(sc); TG.FL.init(sc); TG.AS.init(sc); if (TG.RES) TG.RES.init(sc); },
           () => { TG.PL.mixer.update(0.01); TG.H.makeFace(); applyPickUI(); }, warmup];
         for (let i = 0; i < steps.length; i++) { steps[i](); TG.H.loadProg(0.78 + 0.22 * (i + 1) / steps.length); await rest(); }
         applySettings();
@@ -172,14 +172,14 @@
     G.tick = 0; G.time = 0; G.realT = 0; G.gauge = 0; G.combo = 0; G.comboT = 0; G.maxCombo = 0; G.notes = 0; G.popped = 0; G.rescued = 0; G.bossStarted = false;
     G.floor = 1; G.fogPop = 0; G.floorDone = false; G.cocoonDone = false; G.level = 1; G.xp = 0; G.xpNeed = XP0; G.pendingCards = 0; G.cardOpen = null; G.cardN = 0; G.revived = false;
     G.rerollLeft = REROLL_MAX; G.rerollN = 0; G.inReroll = false; G.reviveT = 0; if (TG.H.reviveCount) TG.H.reviveCount(null); if (G.skillOpen) closeSkills(); // 11-18 다시 뽑기·다시 일어나기 카운트·내 리믹스 카드 창
-    G.rankMode = !!(TG.Q && TG.Q.rank); // 11-18 순위(끝까지) 모드 깃발(?rank=1, 끝까지 모드 만들 때 여기서 켬) — 「다시 일어나기」 카드 안 나옴
+    G.rankMode = !!(TG.Q && TG.Q.rank) || !!(G.netRun && G.netRun.mode === 'rank') || !!(G.replay && G.replay.rank); // 재생은 기록의 rank 칸(끝까지 모드는 확대 연출 1.5초 등 걸음 수가 달라 같은 모드로 돌려야 같은 결과) // 11-27 카드 2단계: 서버 끝까지 모드 판(js/net.js TG.netRun)도 순위 모드 // 11-18 순위(끝까지) 모드 깃발(?rank=1, 끝까지 모드 만들 때 여기서 켬) — 「다시 일어나기」 카드 안 나옴
     G.spawnT = 1.0; G.clumpT = 4; G.echoT = 3; G.tickT = 5; G.autoCd = 0.3; G.stillT = 0; G.faceDir = 0; G.fireOn = false; G.fireDir = 0; G.shots = 0; G.aimShots = 0; G.lined = 0; G.hintT = 0; G.hurts = 0; G.guards = 0; G.testIn = null; G.endT = 0; G.clear = false; G.cheered = false; G.freeze = 0; G.hash = 0; G.hsCd = 0;
     G.gaugeLock = 0; G.hintStage = 0; G.moved = 0; G.afters.length = 0; G.inBig = false; G.inPick = -1; G.inCard = -1; G.botW = 0; G.botStuck = 0; G.botSideT = 0; G.botSideS = 1; G.botLx = 0; G.botLz = 0; G.botCocT = 0; G.machSlow = false; G.camFocusK = 0.45;
     G.autoTicks = 0; G.playTicks = 0; G.autoShots = 0; G.autoOn = false;
-    G.lastPopT = 0; G.arrowU = null; G.arrowSaid = false; G.danceN = 0; G.dancePops = 0; G.flyN = 0; G.beamN = 0; G.paintN = 0; G.slowN = G.shrinkN = G.tileN = G.seedN = G.seedPops = G.nudgeN = G.decoN = G.cuStars = G.cuPetals = G.cuSpin = 0; G.decoWordT = null; G.slowSeq = 0; G.mirrorSeq = 0; G.mirrorN = G.mirrorChains = G.darkN = G.darkPops = G.lineN = 0; G.friendWord = null; // 11-27 거울 재생: mirrorSeq(거울 안개 차례)가 판마다 0부터 — 안 비우면 한 페이지에서 2판째부터 거울 자리가 밀려 기록 재생이 어긋남(fresh 재생과 다름) G.danceMusicAt = G.danceVoiceAt = G.danceBoomAt = null; G.hurtBy = {}; // 11-16: 남은 안개 화살표·큰 소리 셈
+    G.lastPopT = 0; G.arrowU = null; G.arrowSaid = false; G.danceN = 0; G.dancePops = 0; G.flyN = 0; G.beamN = 0; G.paintN = 0; G.slowN = G.shrinkN = G.tileN = G.seedN = G.seedPops = G.nudgeN = G.decoN = G.cuStars = G.cuPetals = G.cuSpin = 0; G.decoWordT = null; G.slowSeq = 0; G.mirrorSeq = 0; G.bubSeq = 0; G.res = resInit(); G.mirrorN = G.mirrorChains = G.darkN = G.darkPops = G.lineN = 0; G.friendWord = null; // 11-27 거울 재생: mirrorSeq(거울 안개 차례)가 판마다 0부터 — 안 비우면 한 페이지에서 2판째부터 거울 자리가 밀려 기록 재생이 어긋남(fresh 재생과 다름) G.danceMusicAt = G.danceVoiceAt = G.danceBoomAt = null; G.hurtBy = {}; // 11-16: 남은 안개 화살표·큰 소리 셈
     G.denyT = -9; G.shelterT = 0; G.shelterPick = -1; G.covT = 0; G.biT = 0; G.biStage = 0; G.lid = null; G.countAt = null; G.lastCount = -1;
     TG.F.reset(); TG.WV.reset(); if (!keepFx) TG.FX.clear(); TG.PL.reset(); TG.PL.setRest(false); TG.C.reset(); TG.FL.reset(); TG.AS.reset();
-    TG.H.hideCards(); TG.H.hideShelter(); TG.H.gruntHide(); TG.H.hintSet(null);
+    TG.H.hideCards(); TG.H.hideShelter(); TG.H.gruntHide(); TG.H.hintSet(null); if (TG.H.resSay) TG.H.resSay(null); if (TG.RES) TG.RES.hide(); // 11-28 주민 초상·3D 끔
     TG.PL.stillLv = 0; TG.PL.idleT = 0; G.result = null;
     G.hemiT = 1.35; G.camZoom = 1; G.cu = null; G.clearInfo = null; if (!G.floors) G.floors = FLOORS.map((f, i) => f && scaledFloor(f, i));
     cam.lx = cam.lz = cam.vlx = cam.vlz = cam.gx = cam.gz = cam.hold = cam.cT = cam.m = cam.mT = 0;
@@ -215,7 +215,7 @@
     G.dunBanner = false; // 11-19 광장에서 첫 던전으로 출발 — 이름 띠는 updateIntro 0.25초에
   }
   // 광장에서 고른 던전·단계(js/dungeons.js DN.sel)로. 튜토리얼 전엔 「방송 파이프 굴」 1단계 고정
-  function pickFromHub() { setDungeon(TG.DN.sel.dun, TG.DN.sel.lv); applyTheme(DUNGEON, LV); } // 11-25 대표: 튜토리얼 전에도 고른 던전으로(첫 판 안내는 G.tutRun 으로 그대로)
+  function pickFromHub() { setDungeon(TG.DN.sel.dun, TG.DN.sel.lv); applyTheme(DUNGEON, LV); if (DUNGEON.res && TG.RES) TG.RES.preload(DUNGEON.owner); } // 11-28 주민 던전 주인 3D 미리 받기(그림만) // 11-25 대표: 튜토리얼 전에도 고른 던전으로(첫 판 안내는 G.tutRun 으로 그대로)
   // 던전 테마(그림만): 하늘·빛·광장 고리 색. null = 기본(방송 파이프 굴 = 광장)
   const THEME0 = { bg: 0x9fd7f2, sky: 0xdcefff, ground: 0xd9a878, pulse: 0xff7a52 };
   // 11-24 단계 분위기(js/dungeons.js TG.LEVEL_LOOK): 던전 색 위에 단계 색을 mix 만큼 섞음 — 하늘·반구광·햇빛·멀리 안개·바닥 색조·안개/보스 색. 광장(null)은 늘 1단계(낮). 그림만
@@ -242,19 +242,24 @@
   // 놀이 시작: 여기서부터 규칙 계산이 기록·재생 대상 (처음 상태를 늘 똑같이 맞춤)
   function startPlay(skipIntro) {
     { const rp0 = G.replay; if (rp0) { const rh = rp0.hero || 'sefo', ra = rp0.assist || 'none'; if (rh !== TG.heroId || ra !== TG.assistId) setHeroNow(rh, ra, true); } } // 기록에 적힌 주인공·보조로 (옛 기록 v2 = SEFO·없음)
-    { const rp0 = G.replay; if (rp0) { setDungeon(rp0.dun || 'pipe', rp0.lv || 1); applyTheme(DUNGEON, LV); } else if (skipIntro) pickFromHub(); } // 기록엔 던전·단계가 적힘(없는 옛 기록 = 파이프 굴 1단계)
+    { const rp0 = G.replay; if (rp0) { setDungeon(rp0.dun || 'pipe', rp0.lv || 1); applyTheme(DUNGEON, LV); } else if (TG.netRun) { TG.DN.select(TG.netRun.dun, TG.netRun.lv); setDungeon(TG.netRun.dun, TG.netRun.lv); applyTheme(DUNGEON, LV); } else if (skipIntro) pickFromHub(); } // 기록엔 던전·단계가 적힘(없는 옛 기록 = 파이프 굴 1단계) // 11-27 카드 2단계: 서버 판(js/net.js)은 서버가 준 던전·단계
+    G.netRun = G.replay ? null : TG.netRun || null; TG.netRun = null; // 서버 판 표(판 번호·시드·던전·단계·모드)는 이 판에만 — 다음 판에 안 남게 바로 비움
     resetRun(!skipIntro);
-    G.eq = (!G.replay && !G.rankMode && TG.K) ? TG.K.bonus() : null;
-    G.gear = (!G.replay && !G.rankMode && TG.W) ? TG.W.ability(TG.W.data.lvl) : null; P().guardAcc = 0; // 11-25 톱니 레벨 4능력(js/wallet.js W.ability — 레벨 1 = 전부 0 = 표준). 끝까지 모드·기록 재생은 null(랭킹 공정 A안). 소리 세기·간격 = wave.js stat, 이동 = cards.js recalc, 보호 = player.js hurt
+    { const rp0 = G.replay;
+      // 11-27 카드 2단계: 기록 재생은 기록에 적힌 장착 능력치(eq, %)·톱니 레벨(gl)로 — 없으면 표준 수치(옛 기록·끝까지 모드 그대로). 서버 끝까지 모드 판(G.netRun)은 카드 능력치 O(합계 상한) · 레벨 효과 X(v8 13-4 A안 「표준 수치 + 카드 +15% 상한」). 이 기기만의 ?rank=1 은 둘 다 X(전과 같음)
+      if (rp0) { G.eq = rp0.eq && TG.K ? (() => { const o = {}; let t = 0; TG.K.EFFECTS.forEach((e) => { o[e.id] = (+rp0.eq[e.id] || 0) / 100; t += +rp0.eq[e.id] || 0; }); o.total = +(t / 100).toFixed(4); return o; })() : null; G.gear = rp0.gl > 1 && TG.W ? TG.W.ability(rp0.gl) : null; }
+      else { G.eq = (!G.rankMode || (G.netRun && G.netRun.mode === 'rank')) && TG.K ? TG.K.bonus() : null; G.gear = (!G.rankMode && TG.W) ? TG.W.ability(TG.W.data.lvl) : null; } }
+    P().guardAcc = 0; // 11-25 톱니 레벨 4능력(js/wallet.js W.ability — 레벨 1 = 전부 0 = 표준). 끝까지 모드·기록 재생은 null(랭킹 공정 A안). 소리 세기·간격 = wave.js stat, 이동 = cards.js recalc, 보호 = player.js hurt
     if (TG.C && TG.C.recalc) TG.C.recalc(); // 11-25 카드 1단계: 장착 카드 능력치(일반 판만). 끝까지 모드(?rank=1)·기록 재생은 표준 수치(v8 13-4 A안) — 기록(REC_V 7)·시드엔 안 들어감
     if (TG.U) TG.U.setup(); // 11-25 유니크 ★ 1판 1번(js/unique.js): 유니크 카드를 끼고 그 캐릭이면 별 버튼. 끝까지 모드도 가진 사람은 그대로(대표: 유니크 수치 랭킹 유지) · 재생은 기록 깃발이 정함
     if (skipIntro) showHud();
     const p = P();
     p.x = p.px = 0; p.z = p.pz = 3.2; p.root.visible = true; p.ring.visible = true;
     const rp = G.replay;
-    G.seed = rp ? rp.seed : (TG.Q.seed != null ? TG.Q.seed >>> 0 : (Math.random() * 4294967296) >>> 0);
+    G.seed = rp ? rp.seed : G.netRun ? G.netRun.seed >>> 0 : (TG.Q.seed != null ? TG.Q.seed >>> 0 : (Math.random() * 4294967296) >>> 0); // 11-27 서버 판 = 서버가 준 시드(끝까지 모드는 그날 모두 같은 시드)
     let first;
     if (rp) first = !!rp.first;
+    else if (G.netRun && G.netRun.mode === 'rank') first = false; // 끝까지 모드: 보스 첫 판(70% 속도) 없음 — 모두 같은 조건 [대표 확인]
     else if (TG.Q.first != null) first = TG.Q.first === '1';
     else if (TG.Q.seed != null) first = true;
     else { try { first = !localStorage.getItem('tg_slice_boss'); } catch (e) { first = true; } }
@@ -263,6 +268,10 @@
     if (rp) TG.Q.god = !!rp.god;
     TG.simSeed(G.seed);
     G.rec = { v: REC_V, seed: G.seed, first: first ? 1 : 0, god: TG.Q.god ? 1 : 0, hero: TG.heroId, assist: TG.assistId, dun: DUNGEON.id, lv: LV, ticks: [], cards: [] }; if (G.uq && G.uq.def && G.uq.def.key) G.rec.uqk = G.uq.def.key; // 11-26 세포 2번째 연출(「세포키즈 출동!」 = 'kids')을 고른 판만 칸 하나 더(없으면 1번 연출) — 재생은 이 칸으로 같은 연출·보너스. 유니크 없는 판은 칸 없음(v7 그대로) // 11-24 dun·lv: 던전·단계(규칙 배율) — 없으면 파이프 굴 1단계라 v7 그대로 // v3(11-16): hero·assist 칸 — 재생 때 같은 주인공·보조로. v4(11-16 오후): 기본 소리 파형 통일·큰 소리 4종 새 규칙 — v3 이하 기록은 규칙이 달라 재생 안 함(api.replay)
+    if (!rp) { // 11-27 카드 2단계: 장착 능력치(%)·톱니 레벨을 기록에 같이(REC_V 8 그대로, 선택 칸 — 둘 다 0 이면 칸 없음 = 옛 기록과 같은 꼴). 서버는 「서버가 아는 카드」와 같은지 보고, 재생은 이 값으로 같은 수치
+      if (G.eq && G.eq.total > 0 && TG.K) { const b = TG.K.bonusPct(), o = {}; TG.K.EFFECTS.forEach((e) => { o[e.id] = b[e.id]; }); G.rec.eq = o; }
+      if (G.gear && TG.W && TG.W.data.lvl > 1) G.rec.gl = TG.W.data.lvl;
+      if (G.rankMode) G.rec.rank = 1; } // 끝까지 모드 판 표시(재생 때 같은 모드) — 일반 판은 칸 없음
     G.rpI = 0; G.rpN = 0; G.replayDone = false;
     TG.A.bgm(DUNGEON.music.floor || 'bgm_battle', 0.8); // 던전별 음악 자리(js/dungeons.js music.floor)
     startFloor(1);
@@ -314,11 +323,68 @@
     else if (n === 2) SSEL('think', '뭉치는 터지면 둘로 나뉘어! 조심~', 3.0, 2.4);
     else SSEL('wink', '메아리는 두 번 맞혀야 퐁! 할 수 있지?', 3.0, 2.4);
     if (n > 1) TG.A.countBeep(true);
+    if (n > 1 && TG.RES && TG.RES.mode === 'welcome') TG.RES.hide();
+    if (n === 1 && DUNGEON.res && DUNGEON.owner) { TG.H.resSay(DUNGEON.owner, DUNGEON.ownerName, DUNGEON.welcome || '', false, 3.8, DUNGEON.color); if (TG.RES) TG.RES.show(DUNGEON.owner, 'welcome', P()); } // 11-28 주민 던전: 주인이 입구에서 반김(초상 + 3D, 그림만)
   }
   G.fogLeft = function () {
     if (G.phase === 'shelter' || G.floorDone) return 0;
     return Math.max(0, 1 - G.fogPop / FL(G.floor).budget);
   };
+  // ── 11-28 주민 던전 장치(규칙 — 난수 0, 시간·자리만. 주민 던전 RULE 키가 있을 때만 → 지금 6던전 영향 0) ──
+  //   dial(POY): 다이얼 발판 = AR.vents2 앞 3곳(안쪽 바닥 격자, 충돌 없음). 주인공이 발판 위(반지름 1.25)에 hold 초 서 있으면 「딸깍!」 둘레 r 안 안개가 dur 초 느려짐(×slow), 발판마다 쿨 cd 초(단계별 TG.RES_LV)
+  //   bubble(LOKI): 말풍선 안개 퐁 → 둘레 3.5 안개 jump 초 멈춤(u.stun) + 그동안 피해 ×1.2(hitUnit) · drum(KILLATON): 파동이 북(스피커 자리 6곳)에 닿으면 둘레 r 링 — 링 안 안개에 기본 소리 ×k 피해, 북마다 쿨
+  function resInit() { return { pads: [0, 1, 2].map(() => ({ t: 0, cd: 0 })), drums: [0, 0, 0, 0, 0, 0], dialN: 0, dialSlow: 0, bubN: 0, bubPops: 0, bubJumps: 0, drumN: 0, drumHits: 0 }; }
+  function resSim(dt, p) {
+    const R = G.res, L = TG.F.list, lvk = TG.RES_LV ? TG.RES_LV(DUNGEON.id, LV) : {};
+    if (RULE.dial && (G.phase === 'floor' || G.phase === 'boss') && !p.resting) {
+      const V = TG.AR.vents2, d = RULE.dial; // 발판 = 안쪽 바닥 격자 자리 vents2[0..2](밟고 지나감 — 구석 vents 는 턱이 있어 못 올라섬)
+      for (let i = 0; i < 3 && i < V.length; i++) {
+        const q = R.pads[i]; if (q.cd > 0) { q.cd -= dt; q.t = 0; continue; }
+        const on = (p.x - V[i][0]) ** 2 + (p.z - V[i][1]) ** 2 < 1.25 * 1.25;
+        q.t = on ? q.t + dt : 0;
+        if (q.t >= d.hold) {
+          q.t = 0; q.cd = lvk.cd || 6; R.dialN++;
+          for (const u of L) if (u.state === 'live' && u.kind !== 'cocoon' && u.kind !== 'tick' && (u.x - V[i][0]) ** 2 + (u.z - V[i][1]) ** 2 < d.r * d.r) { u.dialT = lvk.dur || 2; R.dialSlow++; }
+          TG.FX.ring(V[i][0], V[i][1], { r0: 0.6, r1: d.r, dur: 0.5, color: 0x7ff0a8, width: 0.22, hdr: 1.2 }); TG.FX.ring(V[i][0], V[i][1], { wall: true, r0: 0.5, r1: 1.4, dur: 0.35, color: 0xe6fff0, h: 1.2, alpha: 0.6 });
+          TG.FX.text('딸깍!', V[i][0], 2.6, V[i][1], 'word'); TG.A.play('sfx_bonk', { rate: 1.9, gain: 0.35 }); vib('kill');
+        }
+      }
+    }
+    for (const u of L) { // 시계: 다이얼 느려짐 · 말풍선 점프
+      if (u.dialT > 0) { u.dialT -= dt; u.slowK *= RULE.dial ? RULE.dial.slow : 1; }
+      if (u.bubJ > 0) u.bubJ -= dt;
+    }
+  }
+  function resBubblePop(u) {
+    const R = G.res, jd = (TG.RES_LV ? TG.RES_LV(DUNGEON.id, LV).jump : 0) || 0.8, FX = TG.FX; R.bubPops++;
+    for (const v of TG.F.list) if (v !== u && v.state === 'live' && v.kind !== 'cocoon' && v.kind !== 'tick' && (v.x - u.x) ** 2 + (v.z - u.z) ** 2 < 3.5 * 3.5) { v.bubJ = jd; v.stun = Math.max(v.stun || 0, jd); R.bubJumps++; }
+    FX.text('다 같이!', u.x, u.y + 1.9, u.z, 'cheer'); FX.ring(u.x, u.z, { r0: 0.5, r1: 3.5, dur: 0.45, color: 0xfff1b8, width: 0.25, hdr: 1.25 });
+    TG.A.play('sfx_pick', { rate: 1.45, gain: 0.45 });
+  }
+  function resDrum(dt) {
+    const R = G.res, S = TG.AR.SPOTS.speakers, d = RULE.drum, lvk = TG.RES_LV ? TG.RES_LV(DUNGEON.id, LV) : {}, k = lvk.k || d.k, FX = TG.FX;
+    for (let j = 0; j < S.length && j < 6; j++) if (R.drums[j] > 0) R.drums[j] -= dt;
+    const hitDrum = (j, dmg) => {
+      const x = S[j][0], z = S[j][1]; R.drums[j] = lvk.cd || d.cd; R.drumN++;
+      for (const u of TG.F.list) if (u.state === 'live' && u.kind !== 'cocoon' && u.spawnT >= 0.3 && (u.x - x) ** 2 + (u.z - z) ** 2 < d.r * d.r) { R.drumHits++; G.hitUnit(u, dmg * k, x, z, true, 0, [1.3, 1.4, 2.4]); }
+      FX.ring(x, z, { r0: 0.8, r1: d.r, dur: 0.4, color: 0xb4bcff, width: 0.26, hdr: 1.3 }); FX.ring(x, z, { wall: true, r0: 0.7, r1: d.r * 0.8, dur: 0.35, color: 0xd8dcff, h: 1.6, alpha: 0.55 });
+      FX.text('둥!', x, 3.0, z, 'word'); TG.A.play('sfx_bonk', { rate: 0.6, gain: 0.5 });
+    };
+    for (const w of TG.WV.pool) { // 파형(세포·허조교·쎄니·베리): 호 띠가 북(반지름 0.9)에 닿음
+      if (!w.on || w.done) continue;
+      for (let j = 0; j < S.length && j < 6; j++) {
+        if (R.drums[j] > 0) continue; // 북마다 쿨(≥4초)이 파동 수명보다 길어 한 파동이 같은 북을 두 번 못 침
+        const dx = S[j][0] - w.x, dz = S[j][1] - w.z, dd = Math.hypot(dx, dz);
+        if (Math.abs(dd - w.r) > w.L.band * 0.5 + 0.9) continue;
+        if (Math.abs(TG.angDiff(w.dir, Math.atan2(dx, dz))) > w.L.half + Math.atan2(0.9, Math.max(dd, 0.5))) continue;
+        hitDrum(j, w.L.dmg * (w.dmgK || 1));
+      }
+    }
+    for (const b of TG.WV.bolts) { // 빔(모쉬): 빔 끝이 북에 닿음
+      if (b.done) continue;
+      for (let j = 0; j < S.length && j < 6; j++) { if (R.drums[j] > 0) continue; if ((b.x - S[j][0]) ** 2 + (b.z - S[j][1]) ** 2 < 1.1 * 1.1) hitDrum(j, b.L.dmg); }
+    }
+  }
   function spawnPoint(minD) {
     const p = P();
     for (let i = 0; i < 20; i++) {
@@ -347,6 +413,7 @@
       if (RULE.dark && kind === 'clump' && G.floor >= 2 && F_count('dark') < 2) { u.dark = true; G.darkN = (G.darkN || 0) + 1; } // 11-27 모쉬 「깜깜 큐브」 = 2층 B(뭉치 슬롯): 튼튼함 5·둘로 나뉨 그대로, 살아 있으면 불이 어두워짐(그림) — 동시 2마리까지(옛 「무리마다 깜깜 안개 1마리 더」는 뺌)
       if (line) { u.line = true; u.spd = kind === 'bubble' ? 3.1 : u.spd; u.ph = 0; G.lineN = (G.lineN || 0) + 1; } // 줄은 같은 빠르기(앞뒤가 흩어지지 않게)
       if (RULE.mirror && kind === 'bubble') { G.mirrorSeq = (G.mirrorSeq || 0) + 1; if (G.mirrorSeq % RULE.mirror === 0) { u.mirror = true; G.mirrorN = (G.mirrorN || 0) + 1; } } // 11-24 모쉬 「거울 안개」: 3마리 중 1마리(차례 — 시드·기록과 무관한 고정 순서)
+      if (RULE.bubble && kind === 'bubble') { G.bubSeq = (G.bubSeq || 0) + 1; if (G.bubSeq % RULE.bubble === 0) { u.bub = true; G.res.bubN++; } } // 11-28 LOKI 「말풍선 안개」: 3번째 A마다(차례 셈 — 시드·기록과 무관한 고정 순서, 판마다 0부터)
       if (RULE.slowpoke && kind === 'bubble') { G.slowSeq = (G.slowSeq || 0) + 1; if (G.slowSeq % RULE.slowpoke === 0) { u.slow = true; u.scale = 1.5; u.hp = u.maxHp = 3; u.spd *= 0.55; G.slowN = (G.slowN || 0) + 1; } } // 11-24 쎄니 「느림보 안개」: 3마리 중 1마리 — 크고(1.5) 느리고(×0.55) 튼튼함 3, 맞을수록 작아짐(hitUnit)
     }
     if (RULE.seed && kind === 'bubble' && n >= 2 && F_count('seed') < 4) { // 11-24 베리 「씨앗 안개」: 무리마다 1마리(작음 0.7·튼튼함 1, 열매 위에 콩콩 — 그림) — 퐁 하면 열매 익음 + 꽃 자국(onPop)
@@ -436,6 +503,7 @@
   // ── 보스 등장: 기계가 잠깐 느려짐 → 가운데 큰 안개가 뭉침 → 이름 띠 → 카메라 줌 → SEFO가 보스 쪽을 봄 ──
   function startBossIntro() {
     G.phase = 'bossIntro'; G.bossStarted = true; G.biT = 0; G.biStage = 0;
+    if (TG.RES && TG.RES.mode === 'welcome') TG.RES.hide(); // 11-28 입구 반김 주민은 보스전 전에 꼭 퇴장
     if (TG.AR.setFloorLook) TG.AR.setFloorLook(4); // 11-27 보스전 맵 모습(스포트라이트·LED 원 등, 그림만)
     G.machSlow = true; G.hemiT = 1.1; G.camFocusK = kidK(0.5);
     P().noHurt = 6;
@@ -455,7 +523,7 @@
     }
     if (G.biStage >= 1 && TG.F.boss) { const b = TG.F.boss; p.tyaw = Math.atan2(b.x - p.x, b.z - p.z); p.faceLock = 0.3; }
   }
-  function scaleBoss(b) { b.hp = b.maxHp = Math.round(b.maxHp * LK.hp); b.spdK *= LK.boss; } // 11-24 단계 배율(보스 튼튼함·빠르기)
+  function scaleBoss(b) { b.hp = b.maxHp = Math.round(b.maxHp * LK.hp); b.spdK *= LK.boss; b.lv = LV; if (b.cfg && b.cfg.order9 && LV >= 9) b.order = b.cfg.order9; } // 11-24 단계 배율(보스 튼튼함·빠르기) · 11-28 b.lv(주민 던전 9단계 「보스 두 단계」 — 바늘 2개·북 8곳·order9)
   G.onBossLand = function () {
     const b = TG.F.boss, FX = TG.FX;
     G.machSlow = false; G.biStage = 2;
@@ -468,6 +536,7 @@
     else { TG.A.play('sfx_big', { rate: 0.6, gain: TG.hero.kid ? 0.55 : 0.9 }); if (!TG.hero.kid) TG.A.boom(); } // 아이로 하면 큰 효과음 줄임 (놀람 방지)
     TG.H.showBanner(DUNGEON.bossName || '큰 침묵 안개', DUNGEON.bossSub || '노래를 꽁꽁 숨긴 안개예요', cute ? 'gold name' : 'boss name', 2.2);
     if (cute) SSEL('smile', RULE.boss.var === 'tree' ? '큰 나무가 잠들었어요! 꽃으로 깨워 주자!' : '미러볼이 삐졌어요! 물감으로 꾸며 주자!', 3.0);
+    else if (RULE.boss && RULE.boss.bossSay) SSEL('surprise', RULE.boss.bossSay, 3.0); // 11-28 주민 던전 보스 등장 쎌 말(던전표)
     else SSEL('surprise', RULE.boss && RULE.boss.var === 'drill' ? '헉, 헬멧 쓴 큰 안개야! 구령에 맞춰 굴러와!' : RULE.boss && RULE.boss.var === 'dark' ? '헉, DJ 큐브가 꺼졌어! 불을 켜 주자!' : RULE.boss && RULE.boss.var === 'gym' ? '헉, 뜀틀 위에 큰 안개야! 구령 4박에 조심!' : '헉, 엄청 큰 안개야! 같이 해 보자!', 3.0);
     G.camZoom = 0.74; G.camFocusK = kidK(0.85); // 잠깐 줌 (아이 주인공은 보스만 — 아이는 원경, 기획서 ④ 안전 3)
     G.after(84, () => { if (G.phase === 'bossIntro') { G.phase = 'boss'; G.camZoom = 1.12; G.camFocusK = 0.45; G.hemiT = 1.35; } });
@@ -480,6 +549,7 @@
   G.HS = HS;
   let mirrorBusy = false; // 거울 튕김이 또 튕기지 않게
   G.hitUnit = function (u, dmg, ox, oz, quiet, level, tint) {
+    if (u.bubJ > 0 && dmg < 50) dmg *= 1.2; // 11-28 LOKI 말풍선 퐁 「깜짝 점프」 중엔 피해 ×1.2(규칙)
     const big = dmg >= 50, lv = level || 0;
     const r = TG.F.damage(u, dmg, ox, oz, big);
     if (!r) return null;
@@ -568,6 +638,7 @@
     else if (u.byBig && G.combo > 0 && G.combo % 10 === 0) FX.text('퐁!', u.x, y + 1.2, u.z, 'pop');
     G.popped++;
     if (u.seed) { G.seedPops = (G.seedPops || 0) + 1; FX.text('열매 익었다!', u.x, y + 1.7, u.z, 'cheer'); for (let i = 0; i < 5; i++) FX.emit(FX.CELL.heart, u.x, y + 0.4, u.z, { vx: TG.fra(-2, 2), vy: TG.fra(3, 5.5), vz: TG.fra(-2, 2), life: 0.8, size: 0.5, size1: 0.2, color: [2.4, 0.7, 0.8], grav: 7, rot: 0, pop: true }); TG.FL.add(u.x, u.z, false); TG.A.play('sfx_pick', { rate: 1.6, gain: 0.5 }); } // 11-24 베리 「씨앗 안개」 퐁 → 열매 익음 + 꽃 자국(밟으면 조금 회복 — 응원 「버티게」)
+    if (u.bub && RULE.bubble) resBubblePop(u); // 11-28 LOKI 말풍선 안개 퐁 → 둘레 3.5 안개 깜짝 점프(멈춤)
     if (u.dark) { G.darkPops = (G.darkPops || 0) + 1; FX.text('불 켜졌다!', u.x, y + 1.9, u.z, 'cheer'); FX.ring(u.x, u.z, { r0: 0.5, r1: 6, dur: 0.6, color: 0x9ff4ff, width: 0.25, hdr: 1.3, alpha: 0.8 }); TG.R.bloomPulse = Math.max(TG.R.bloomPulse || 0, 0.3); TG.A.play('sfx_pick', { rate: 1.3, gain: 0.5 }); } // 11-24 모쉬 깜깜 안개 퐁 → 불 켜짐(그림)
     if (!u.byBig && !big && G.hsCd <= 0) { FX.hitstop(HS.pop); G.hsCd = HS.cdPop; } // 11-25 타격감: 평타로 퐁 날 때도 50ms(큰 소리 연쇄 퐁은 X — 화면이 끊기지 않게)
     if (!u.byBig) addGauge(big ? 8 : u.kind === 'echo' ? 6 : 4);
@@ -693,6 +764,7 @@
     else G.after(12, () => { if (G.cu) TG.A.bgm('bgm_win', 0.25, false); });
     if (home) SSEL('cheer', (DUNGEON.owner === 'sseni' || DUNGEON.owner === 'berri' ? '꼬마 쎌도 ' : '쎌도 ') + '같이 춤! 야호!', G.cu.dur + 0.3); // 홈 던전: 쎌(아이 던전은 꼬마 쎌)이 옆에서 같이 춤
     else SSEL('cheer', DUNGEON.owner ? DUNGEON.ownerName + ' 던전 주민들이 손을 흔들어!' : '해냈다! 너 최고야!', G.cu.dur + 0.3);
+    if (DUNGEON.res && DUNGEON.owner) { TG.H.resSay(DUNGEON.owner, DUNGEON.ownerName, DUNGEON.cheer || '', true, G.cu.dur + 0.6, DUNGEON.color); if (TG.RES) TG.RES.show(DUNGEON.owner, 'cheer', P()); } // 11-28 주민 던전: 끝 확대 때 주인이 옆에서 같이 환호(초상 + 3D)
     document.body.classList.add('closeup'); TG.H.cuSkip(true);
     P().cuPose = null;
   }
@@ -734,7 +806,7 @@
     if (p.cuPose) { p.cuPose.t += dt; if (p.cuPose.t >= p.cuPose.dur) { p.cuPose = null; idleHold(p, false); } }
     if (c.skip || c.t >= c.dur + 0.25) { endCloseup(); finish(true); }
   }
-  function endCloseup() { G.cu = null; P().cuPose = null; idleHold(P(), false); document.body.classList.remove('closeup'); TG.H.cuSkip(false); }
+  function endCloseup() { G.cu = null; P().cuPose = null; idleHold(P(), false); document.body.classList.remove('closeup'); TG.H.cuSkip(false); if (TG.RES) TG.RES.hide(); }
   G.skipCloseup = function () { if (G.cu) G.cu.skip = true; };
 
   function addCombo() {
@@ -1643,6 +1715,7 @@
       reviveTick(dt); // 11-18 다시 일어나기 카운트(쓰러진 채)
       TG.C.sim(dt, p, G);
       TG.WV.zones(dt, G); // 11-17 쎄니 물감 구역(느려짐·도트) — 안개 움직임 전에, 카드가 되돌린 slowK 에 곱함
+      if (RULE.dial || RULE.bubble) resSim(dt, p); // 11-28 주민 던전 장치(POY 다이얼 발판 느려짐·LOKI 점프 시계) — slowK 에 곱함
       updateHints(dt, input);
       updateArrow();
     } else { p.charging = false; p.stillLv = 0; G.fireOn = false; p.keepFace = false; }
@@ -1663,6 +1736,7 @@
     }
     TG.F.update(dt, G.realT, p, G);
     TG.WV.update(dt, G);
+    if (RULE.drum && (G.phase === 'floor' || G.phase === 'boss')) resDrum(dt); // 11-28 KILLATON 정글 북(파동이 북에 닿으면 둥! 링)
     TG.FL.sim(dt, p, G, play && (G.phase === 'floor' || G.phase === 'boss' || G.phase === 'shelter'));
     TG.AS.sim(dt, p, G, G.phase === 'floor' || G.phase === 'boss');
     G.comboT -= dt; if (G.comboT <= 0) G.combo = 0;
@@ -1755,6 +1829,7 @@
     TG.C.draw(vis, G.drawT, p);
     TG.FL.draw(G.drawT);
     TG.AS.draw(vis, G.drawT, al);
+    if (TG.RES) TG.RES.draw(vis); // 11-28 주민 던전 주인 3D(그림만)
     // 배경 기계: 보스가 나타날 때 잠깐 느려짐
     G.machK = TG.damp(G.machK, G.machSlow ? 0.08 : 1, G.machSlow ? 5 : 2.5, rdt);
     G.arT += vis * G.machK;
@@ -1804,7 +1879,9 @@
     else { TG.A.bgm('bgm_win', 0.25, false); p.stopSpecial(); p.playSpecial('victory'); }
     G.result = { clear, time: G.time, fogs: G.popped, combo: G.maxCombo, notes: G.notes, stars, tick: G.tick, hash: G.hash, level: G.level, rescued: G.rescued, floor: G.floor, boss: !!G.bossStarted, hurts: G.hurts, cards: G.cardN,
       atk: G.autoTicks <= 0 ? 'manual' : G.autoTicks >= G.playTicks ? 'auto' : 'mixed', autoShots: G.autoShots, dungeon: DUNGEON.id, dungeonName: DUNGEON.name, lv: LV, lvName: TG.LEVELS[LV].name, tut: !!G.tutRun, rank: !!G.rankMode };
-    if (clear && !G.replay && !G.bot && !G.tutRun && TG.DN.hasLevels(DUNGEON.id)) { // 11-24 단계 도장(베타 깃발이면 연습 던전도 단계 있음): 깬 최고 단계 저장 → 다음 단계 열림, 첫 클리어 상자(글만 — 톱니 지갑은 다음 일)
+    const net = G.netRun && !G.replay && TG.net && TG.net.active() ? G.netRun : null; // 11-27 카드 2단계: 서버 판 = 톱니·카드·점수는 서버가 검산 뒤 지급(js/net.js submit) — 기기 지급 X
+    if (net) { G.result.net = { runId: net.id, mode: net.mode, status: 'pending' }; if (clear && !G.tutRun && TG.DN.hasLevels(DUNGEON.id)) { const ci = TG.DN.markClear(DUNGEON.id, LV); G.clearInfo = ci; G.result.stamp = { first: ci.first, next: ci.next, nextName: ci.next ? TG.LEVELS[ci.next].name : null, box: null, gear: TG.LEVELS[LV].gear }; } TG.net.submit(net, G.rec, G.result); }
+    else if (clear && !G.replay && !G.bot && !G.tutRun && TG.DN.hasLevels(DUNGEON.id)) { // 11-24 단계 도장(베타 깃발이면 연습 던전도 단계 있음): 깬 최고 단계 저장 → 다음 단계 열림, 첫 클리어 상자(글만 — 톱니 지갑은 다음 일)
       const ci = TG.DN.markClear(DUNGEON.id, LV); G.clearInfo = ci;
       G.result.stamp = { first: ci.first, next: ci.next, nextName: ci.next ? TG.LEVELS[ci.next].name : null, box: ci.boxNew ? TG.LEVELS[LV].box : null, gear: TG.LEVELS[LV].gear };
       // 11-24 톱니 지갑(js/wallet.js): 깬 판 톱니 + 첫 클리어 상자를 실제로 지급(기기 저장). 하루 8판까지 100%, 그 뒤 30% + 쎌 휴식 안내(v8 ㉝). 끝까지 모드(?rank=1)는 순위 보상(서버 몫 12/3)이라 여기선 안 줌 [대표 확인]
@@ -1856,7 +1933,7 @@
         cu: G.cu ? { t: +G.cu.t.toFixed(2), dur: G.cu.dur, skip: G.cu.skip, done: G.cu.done, home: G.cu.home } : null, camDist: +cam.dist.toFixed(2), bgm: TG.A.bgmName, tempLoops: Object.assign({}, TG.A.tempUsed || {}), skipShown: !!(TG.H.cuSkipBtn && !TG.H.cuSkipBtn.classList.contains('hide')), // 11-24 확대 연출·음악
         heroWait: G.heroWait || null, face: TG.PL.faceState ? TG.PL.faceState() : null,
         // 11-24 허조교·모쉬 던전 규칙 상태
-        rule: Object.assign({}, RULE, { boss: RULE.boss ? RULE.boss.var : null }), beta: TG.beta(), lineN: G.lineN || 0, lines: F.list.filter((u) => u.state === 'live' && u.line).length, wallPops: F.wallPops || 0, mirrorN: G.mirrorN || 0, mirrors: F.list.filter((u) => u.state === 'live' && u.mirror).length, mirrorChains: G.mirrorChains || 0,
+        rule: Object.assign({}, RULE, { boss: RULE.boss ? RULE.boss.var : null }), beta: TG.beta(), res: G.res ? Object.assign({}, G.res, { pads: G.res.pads.map((q) => +q.cd.toFixed(2)), drums: G.res.drums.map((v) => +v.toFixed(2)) }) : null, dialT: TG.F.list.filter((u) => u.dialT > 0).length, bubs: TG.F.list.filter((u) => u.state === 'live' && u.bub).length, bubJ: TG.F.list.filter((u) => u.bubJ > 0).length, bossPat: TG.F.boss && TG.F.boss.pat ? TG.F.boss.pat.type + (TG.F.boss.pat.rush ? ':rush' : '') + (TG.F.boss.pat.rail ? ':rail' : '') + (TG.F.boss.pat.drum4 ? ':drum' + TG.F.boss.pat.drum4 : '') + (TG.F.boss.pat.two ? ':two' : '') : null, bossOrderN: TG.F.boss && TG.F.boss.order ? TG.F.boss.order.map((r) => r.length) : null, bossDrops: TG.F.boss ? TG.F.boss.drops.length : 0, bossLv: TG.F.boss ? TG.F.boss.lv || null : null, lineN: G.lineN || 0, lines: F.list.filter((u) => u.state === 'live' && u.line).length, wallPops: F.wallPops || 0, mirrorN: G.mirrorN || 0, mirrors: F.list.filter((u) => u.state === 'live' && u.mirror).length, mirrorChains: G.mirrorChains || 0,
         darkN: G.darkN || 0, darks: F.list.filter((u) => u.state === 'live' && u.dark).length, darkPops: G.darkPops || 0, darkK: +(G.darkK || 0).toFixed(3), hemi: +TG.R.hemi.intensity.toFixed(3), callN: G.callN || 0, beatN: G.beatN || 0, cuPose: p.cuPose ? { name: p.cuPose.name, t: +p.cuPose.t.toFixed(2) } : null, cuPoseK: +(TG.PL.cuPoseK || 0).toFixed(3), bossVar: F.boss ? (F.boss.variant || null) : null, bossOrder: F.boss && F.boss.order ? F.boss.order.length : 0,
         // 11-24 쎄니·베리 던전 상태(귀여운 보스·느림보·타일·씨앗·확대 동작)
         bossCute: !!(F.boss && F.boss.cute), bossGauge: F.boss && F.boss.cute ? +(1 - F.boss.hp / F.boss.maxHp).toFixed(3) : null, bossGaugeWord: F.boss ? (F.boss.gauge || null) : null, friend: !!(F.boss && F.boss.friend), friendN: G.friendN || 0, friendWord: G.friendWord || null, nudgeN: G.nudgeN || 0, decoN: G.decoN || 0, bossVisible: !!(F.bossObj && F.bossObj.group.visible), bossMat: F.bossObj && F.bossObj.mesh ? (F.bossObj.mesh.material === F.bossObj.mats.cloud ? 'cloud' : F.bossObj.mesh.material === F.bossObj.mats.tree ? 'tree' : 'def') : null,
@@ -1872,7 +1949,7 @@
         wallet: TG.W ? TG.W.snap() : null, walShown: !!(TG.H.walPick && !TG.H.walPick.classList.contains('hide')), // 11-24 톱니 지갑
         gear: G.gear || null, guardAcc: +((P().guardAcc || 0).toFixed(4)), guards: G.guards | 0, spdMul: +((P().spdMul || 1).toFixed(4)), jumpShown: !!(TG.H.walJump && !TG.H.walJump.classList.contains('hide')), // 11-25 톱니 레벨 4능력(일반 판만)
         uq: TG.U ? TG.U.state() : null, // 11-25 유니크 ★
-        remix: TG.C.state ? TG.C.state() : null, rank: !!G.rankMode, bossShoutT: F.boss ? +(F.boss.shoutT || 0).toFixed(2) : 0, // 11-18 리믹스 카드 상태
+        remix: TG.C.state ? TG.C.state() : null, rank: !!G.rankMode, netRun: G.netRun ? { id: G.netRun.id, mode: G.netRun.mode, seed: G.netRun.seed } : null, recEq: G.rec && G.rec.eq ? G.rec.eq : null, recGl: G.rec ? (G.rec.gl | 0) : 0, // 11-27 카드 2단계 서버 판·기록 칸 bossShoutT: F.boss ? +(F.boss.shoutT || 0).toFixed(2) : 0, // 11-18 리믹스 카드 상태
         rerollLeft: G.rerollLeft, rerollN: G.rerollN || 0, skillOpen: !!G.skillOpen, skillOpenN: G.skillOpenN || 0, reviveT: +(G.reviveT || 0).toFixed(2), resting: !!p.resting, rerollBtn: TG.H.rerollBtn ? { text: TG.H.rerollBtn.textContent, off: TG.H.rerollBtn.classList.contains('off') } : null, skillRows: TG.H.skList ? TG.H.skList.querySelectorAll('.skRow').length : 0,
       };
     },

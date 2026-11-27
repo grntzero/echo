@@ -38,16 +38,16 @@
     { id: 'grove', name: '톱니 숲', c1: '#d8f5c0', c2: '#5fae5a' },
     { id: 'neon', name: '네온 거리', c1: '#3a3f8e', c2: '#15163a' },
     { id: 'hill', name: '별빛 언덕', c1: '#6a4fb0', c2: '#2a1a4f' }];
-  // 13명(v8 9쪽: 플레이 5 + 주민 8) · dun = 카드가 나오는 던전(주민은 던전이 생기면 적음, 지금은 연습 던전 「모두」 몫) · set = 30장 응원(능력치, v8 13쪽 예 「디제이 = 충전 +2% · 보컬 = 음표 +3%」) [대표 확인: 주민 역할]
+  // 13명(v8 9쪽: 플레이 5 + 주민 8) · dun = 카드가 나오는 던전(주민은 던전이 생기면 적음, 지금은 연습 던전 「모두」 몫 — 11-28 포이·로키·킬라톤 주민 던전 생김: js/dungeons_res.js) · set = 30장 응원(능력치, v8 13쪽 예 「디제이 = 충전 +2% · 보컬 = 음표 +3%」) [대표 확인: 주민 역할]
   K.ARTISTS = [
     { id: 'sefo', name: '세포', col: '#e5352b', dun: 'sefo_dome', play: true, set: { eff: 'rainbow', pct: 2 } },
     { id: 'gunner', name: '허조교', col: '#a7b04f', dun: 'gunner_camp', play: true, set: { eff: 'spark', pct: 2 } },
     { id: 'moshee', name: '모쉬', col: '#2fe0f0', dun: 'moshee_mirror', play: true, set: { eff: 'rainbow', pct: 2 } },
     { id: 'sseni', name: '쎄니', col: '#a46bff', dun: 'sseni_hall', play: true, kid: true, set: { eff: 'star', pct: 2 } },
     { id: 'berri', name: '베리', col: '#ff7fb6', dun: 'berri_orchard', play: true, kid: true, set: { eff: 'petal', pct: 2 } },
-    { id: 'poy', name: '포이', col: '#00c853', dun: null, set: { eff: 'rainbow', pct: 2 } },
-    { id: 'loki', name: '로키', col: '#ff9f1c', dun: null, set: { eff: 'note', pct: 3 } },
-    { id: 'killaton', name: '킬라톤', col: '#2e7d32', dun: null, set: { eff: 'note', pct: 3 } },
+    { id: 'poy', name: '포이', col: '#00c853', dun: 'poy_dial', set: { eff: 'rainbow', pct: 2 } },
+    { id: 'loki', name: '로키', col: '#ff9f1c', dun: 'loki_train', set: { eff: 'note', pct: 3 } },
+    { id: 'killaton', name: '킬라톤', col: '#2e7d32', dun: 'killaton_jungle', set: { eff: 'note', pct: 3 } },
     { id: 'annaconda', name: '애나콘다', col: '#ff5fb8', dun: null, set: { eff: 'note', pct: 3 } },
     { id: 'haena', name: '해나', col: '#ffb300', dun: null, set: { eff: 'note', pct: 3 } },
     { id: 'deta', name: '데타', col: '#c6ff00', dun: null, set: { eff: 'petal', pct: 2 } },

@@ -160,4 +160,5 @@
   LK.get = (id) => (LK[id] && LK[id].bubble ? LK[id] : LK.pipe);
   LK.ids = () => Object.keys(LK).filter((k) => LK[k] && LK[k].bubble);
   LK.walk = (id, kind) => { const L = LK.get(id); return (L.walk && L.walk[kind]) || 'float'; }; // 걸음(규칙) — game.js spawnGroup 이 생성 때 한 번 읽음
+  LK._kit = { P, merge, blob, RING, paint, DISCO, BASE, mk }; // 11-28 주민 던전(js/looks_res.js)이 같은 도형 도우미를 씀 — 동작 변화 0
 })();
