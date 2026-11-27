@@ -176,7 +176,7 @@
         row.appendChild(b); }
       H.walList.appendChild(row);
     }
-    H.walNote.textContent = '같은 톱니 5개 → 윗등급 1개 · 보호자께: 하루 ' + W.DAY_FULL + '판까지 톱니 100%, 그 뒤엔 30% — 쎌이 쉬는 시간을 안내해요';
+    H.walNote.textContent = ((W.data.gift | 0) ? '베타 선물 톱니 ' + W.data.gift + '개 받았어요 · ' : '') + '같은 톱니 5개 → 윗등급 1개 · 보호자께: 하루 ' + W.DAY_FULL + '판까지 톱니 100%, 그 뒤엔 30% — 쎌이 쉬는 시간을 안내해요';
   };
   // ── 11-25 카드 1단계(js/collect.js): 도감 80칸 · 장착 · 세트 · 상세(장착·올리기·바꾸기) ──
   let colArtist = 'sefo', cvId = null;

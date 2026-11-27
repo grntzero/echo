@@ -76,8 +76,9 @@
   };
 
   // ── 저장 ──  v2(11-25): ups(레벨 올린 횟수)·falls(쓰러져도 챙긴 판)·firsts(오늘의 첫 던전 받은 날 수) 추가. v1 저장(11-24)은 그대로 읽고 v2 로 올림(보유분 손실 X)
-  const blank = () => ({ v: 2, g: [0, 0, 0, 0, 0, 0, 0], lvl: 1, day: '', runs: 0, got: [0, 0, 0, 0, 0, 0, 0], merges: 0, cards: 0, gold: 0, spent: 0, ups: 0, falls: 0, firsts: 0, updated: 0 });
+  const blank = () => ({ v: 2, g: [0, 0, 0, 0, 0, 0, 0], lvl: 1, day: '', runs: 0, got: [0, 0, 0, 0, 0, 0, 0], merges: 0, cards: 0, gold: 0, spent: 0, ups: 0, falls: 0, firsts: 0, gift: 0, updated: 0 });
   W.LEGACY_FRAG_KEYS = ['ez_w1_frag', 'ez_frag', 'ez_w1_shards', 'ez_shards']; // 혹시 남아 있을 옛 「톱니 조각」 저장 — 있으면 1등급 톱니로 합침(회의 2-6, 보유분 손실 X). 지금 코드엔 없던 키(안전망)
+  W.BETA_GIFT = 500; W.GIFT_KEY = 'ez_beta_gift';
   W.data = blank();
   W.load = function () {
     let d = null; try { d = JSON.parse(localStorage.getItem(W.KEY) || 'null'); } catch (e) { d = null; }
@@ -92,6 +93,9 @@
     // 옛 「톱니 조각」 키 → 1등급 톱니
     let frag = 0; try { for (const k of W.LEGACY_FRAG_KEYS) { const v = localStorage.getItem(k); if (v != null) { frag += Math.max(0, parseInt(v, 10) || 0); localStorage.removeItem(k); } } } catch (e) { /* 무시 */ }
     if (frag > 0) { W.data.g[1] += frag; W.data.got[1] += frag; W.migrated = Object.assign(W.migrated || {}, { frag }); }
+    // 11-27 대표: 베타 시험자는 처음 켤 때 1등급 톱니 500개 선물(한 기기 1번, gift 칸에 기억 — 레벨 올리기·합치기·카드 올리기 해 보라고). 정식 오픈 땐 TG.BETA_OPEN_ALL 꺼지면 안 줌
+    let gifted = true; try { gifted = !!localStorage.getItem(W.GIFT_KEY); } catch (e) { /* 무시 */ } // 기기에 따로 기억(지갑 지우기·시험 초기화로 다시 안 줌)
+    if (TG.beta && TG.beta() && !gifted && !(W.data.gift | 0)) { W.data.g[1] += W.BETA_GIFT; W.data.gift = W.BETA_GIFT; W.save(); try { localStorage.setItem(W.GIFT_KEY, '1'); } catch (e) { /* 무시 */ } }
     if (W.migrated) W.save();
     return W.data;
   };
