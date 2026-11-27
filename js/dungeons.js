@@ -55,10 +55,11 @@
       music: { floor: 'bgm_dome_sefo', boss: 'bgm_boss', end: 'sfx_gym' }, // floor = 임시 루프(대표 세포 체조 음원 오면 파일만 교체), end = 확대 연출 때 체조 음악 끝 2박
       floors: [null,
         { title: '1층 · 체조 시간이 멈췄어요!', sub: '박자 안개가 박에 맞춰 뛰어요' },
-        { title: '2층 · 안개 뭉치도 박자에!', sub: '터지면 둘로 나뉘어요' },
-        { title: '3층 · 메아리 안개 등장!', sub: '한 번은 통! 두 번째에 퐁' }],
-      bossName: '큰 침묵 안개', bossSub: '체조 음악을 꽁꽁 숨긴 안개예요',
+        { title: '2층 · 훌라후프 안개 등장!', sub: '콩콩 공 안개도 같이 와요 — 터지면 고리가 둘로' },
+        { title: '3층 · 리본 안개까지 셋이 다 같이!', sub: '리본은 한 번은 통! 두 번째에 퐁' }],
+      bossName: '졸린 뜀틀 안개', bossSub: '뜀틀 위에서 꾸벅꾸벅 — 체조 음악을 꽁꽁 숨긴 안개예요', // 11-27 「큰 침묵 안개」 → 던전 주제 보스(대표 OK)
       theme: { bg: 0xffd6ae, sky: 0xfff0d8, ground: 0xe8a07a, pulse: 0xff5a3c }, beat: true,
+      rule: { boss: { var: 'gym', order: [['roll', 'rain'], ['squeeze', 'roll', 'slam', 'rain'], ['rolls', 'call4', 'slam', 'rain']], tint: 0x77729a, words: { roll: '공 굴리기!', rolls: '공 세 번 굴리기!', rain: '솜방울 비!', slam: '뜀틀 쿵!', squeeze: '고리가 조여 와요!', call4: '하나, 둘, 셋, 넷! 고리!' } } }, // 11-27 걸음: A hop · B zig · C dash(js/looks.js) · 3단계 「체조 구령 4박」(call4 = 예고 4박 뒤 둘레 고리)
       npc: '체조 반 꼬마 톱니 로봇' },
     // 11-24 허조교 「연병장 지하」(정본 3장: 좁은 지하 복도·가까운 벽·줄 안개·구령·기상 나팔 · 호루라기·구령·타이어만 — 정본 3장 안전 규칙). rule = 던전 고유 규칙(game.js/fogs.js 가 읽음, 규칙 계산에 들어가 기록 dun 으로 재생 때 같음)
     //  line: 안개가 줄지어(한 줄 행진) 나옴 · wallPop: 맞아 밀린 안개가 벽에 닿으면 바로 퐁(밀착 넉백) · beat: 구령 박자(그림·글만) · boss: 큰 침묵 안개 「구령 변형」(행진 굴러오기 많이·안개 비가 한 줄로·올리브 빛)
@@ -67,11 +68,11 @@
       music: { floor: 'bgm_camp_gunner', boss: 'bgm_boss', end: 'sfx_whistle_gunner' }, // floor = 임시 루프(대표 〈Boot Camp〉 음원 오면 assets/audio/bgm_camp_gunner.mp3 만), end = 호루라기 삑 + 북 한 번(합성)
       floors: [null,
         { title: '1층 · 기상 나팔이 멈췄어요!', sub: '줄 안개가 줄지어 행진해요 — 벽에 밀리면 퐁!' },
-        { title: '2층 · 안개 뭉치도 행진!', sub: '터지면 둘로 나뉘어요 · 벽에 밀어붙여요' },
-        { title: '3층 · 메아리 안개 등장!', sub: '한 번은 통! 두 번째에 퐁' }],
-      bossName: '큰 침묵 안개 · 구령 변형', bossSub: '찌그러진 헬멧을 쓰고 기상 나팔을 꽁꽁 숨긴 안개예요',
+        { title: '2층 · 타이어 굴림 안개 등장!', sub: '행진 안개도 같이 와요 — 타이어는 벽에 튕겨요' },
+        { title: '3층 · 통신병 안개까지 셋이 다 같이!', sub: '통신병은 한 번은 통! 두 번째에 퐁' }],
+      bossName: '잠꾸러기 나팔 안개', bossSub: '큰 나팔 속에서 쿨쿨 — 기상 나팔을 꽁꽁 숨긴 안개예요', // 11-27 「큰 침묵 안개 · 구령 변형」 → 교체(대표 OK)
       theme: { bg: 0x9aa06a, sky: 0xe3e6b6, ground: 0x6f7538, pulse: 0xdce383 }, beat: { bpm: 116, call: ['하나!', '둘!', '셋!', '넷!'] },
-      rule: { line: true, wallPop: true, boss: { var: 'drill', order: [['roll', 'roll', 'rain'], ['rolls', 'slam', 'roll', 'rain'], ['rolls', 'combo', 'rolls', 'rain']], rainLine: true, tint: 0x8a8f5a, sqY: 0.86 } },
+      rule: { line: true, wallPop: true, boss: { var: 'drill', order: [['roll', 'roll', 'rain'], ['rolls', 'slam', 'roll', 'rain'], ['rolls', 'horn3', 'rolls', 'rain']], rainLine: true, tint: 0x8a8f5a, sqY: 0.86, words: { slam: '나팔 빵!', horn3: '기상 나팔 3연타!', rain: '줄 맞춰 비!', rolls: '타이어 굴리기!', roll: '타이어 굴리기!' } } }, // 11-27 3단계 combo → horn3(쿵 + 예고 원 2개 동시) · 걸음: A march · B roll · C spin
       npc: '훈련병 톱니 로봇' },
     // 11-24 모쉬 「거울 네온 미로」(정본 3장: 거울·유리 벽 미로, 어둡지만 파스텔 · 거울 안개(되받기)·깜깜 안개(불 꺼짐) · 공방 불빛)
     //  mirror: 안개 3마리 중 1마리는 거울 안개 — 맞히면 가까운 다른 안개로 빔이 튕겨 같이 맞음(튕김 체인) · dark: 뭉치 대신 가끔 깜깜 안개(크고 튼튼함 2) — 살아 있으면 불이 어두워지고 퐁 하면 불이 켜짐(그림만) · boss: 「어둠 변형」(꺼진 큐브 😐 — 보스전 동안 어둑, 단계 바뀔 때·깰 때 불 켜짐 😊)
@@ -80,11 +81,11 @@
       music: { floor: 'bgm_mirror_moshee', boss: 'bgm_boss', end: 'sfx_drop_moshee' }, // floor = 임시 루프(대표 「moshi moshi」 음원 오면 assets/audio/bgm_mirror_moshee.mp3 만), end = 자체 음원 드롭 1초 자리(합성)
       floors: [null,
         { title: '1층 · 공방 불빛이 꺼졌어요!', sub: '거울 안개를 맞히면 옆 안개로 빔이 튕겨요' },
-        { title: '2층 · 깜깜 안개가 불을 꺼요!', sub: '깜깜 안개를 퐁 하면 불이 켜져요' },
-        { title: '3층 · 메아리 안개 등장!', sub: '한 번은 통! 두 번째에 퐁' }],
-      bossName: '큰 침묵 안개 · 어둠 변형', bossSub: '꺼진 큐브처럼 공방 불빛을 꽁꽁 숨긴 안개예요',
+        { title: '2층 · 깜깜 큐브가 불을 꺼요!', sub: '거울 큐브 안개도 같이 와요 — 깜깜 큐브를 퐁 하면 불이 켜져요' },
+        { title: '3층 · 거울 조각 유성까지 셋이 다 같이!', sub: '유성은 한 번은 통! 두 번째에 퐁' }],
+      bossName: '꺼진 DJ 큐브', bossSub: '헤드폰을 쓴 채 공방 불빛을 꽁꽁 숨긴 큐브예요 — 불을 켜 주자!', // 11-27 「큰 침묵 안개 · 어둠 변형」 → 교체(대표 OK)
       theme: { bg: 0x2a2f55, sky: 0x9fe8f6, ground: 0x4a4478, pulse: 0x2fe0f0 },
-      rule: { mirror: 3, mirrorR: 6.5, dark: true, boss: { var: 'dark', order: [['rain', 'squeeze'], ['slam', 'rain', 'squeeze', 'roll'], ['combo', 'slam', 'rolls', 'rain']], tint: 0x3c4066, dim: 1.0 } },
+      rule: { mirror: 3, mirrorR: 6.5, dark: true, boss: { var: 'dark', order: [['decoy', 'squeeze'], ['slam', 'decoy', 'squeeze', 'roll'], ['combo', 'slam', 'rolls', 'decoy']], tint: 0x3c4066, dim: 1.0, words: { decoy: '거울 분신!', slam: '비트 드롭 쿵!', squeeze: '레이저 줄!', combo: '레이저 줄에 분신까지!' } } }, // 11-27 dark = 2층 B 깜깜 큐브(뭉치 슬롯) · rain → decoy(진짜 1 + 가짜 큐브, 난수 수 같음) · 걸음: A float · B hop · C dash
       npc: '전자제품 로봇(토스터·선풍기)' },
     // 11-24 쎄니 「별빛 댄스홀」(정본 3장: 리듬 타일·느림보 안개(크고 느림, 물감에 작아짐) · 끝 = 귀여운 보스 「삐진 먹구름」 → 웃는 구름·반짝 미러볼). 계획 v8 11쪽: 퐁 없이 물감으로 꾸며 주면 친구, 게이지는 「물감」 말, 아프게 X(바닥 안개만)
     //  slowpoke: 안개 3마리 중 1마리는 느림보(크기 1.5·튼튼함 3·느림, 맞을수록 작아짐) · tiles: 밟으면 켜지는 리듬 타일(그림만) · boss.cute: 귀여운 보스(닿아도 안 아픔·게이지 차오름·끝나면 친구·같이 춤)
@@ -93,11 +94,11 @@
       music: { floor: 'bgm_hall_sseni', boss: 'bgm_boss_cute', end: 'sfx_twinkle_sseni' }, // floor = 임시 루프(AI 음악팀 신곡 오면 assets/audio/bgm_hall_sseni.mp3 만), boss = 밝은 귀여운 보스 음악(베리와 공통, 임시 루프), end = 반짝 효과음(합성)
       floors: [null,
         { title: '1층 · 댄스홀 비트가 멈췄어요!', sub: '느림보 안개는 크고 느려요 — 맞힐수록 작아져요' },
-        { title: '2층 · 리듬 타일을 밟아요!', sub: '안개 뭉치는 터지면 둘로 나뉘어요' },
-        { title: '3층 · 메아리 안개 등장!', sub: '한 번은 통! 두 번째에 퐁' }],
-      bossName: '삐진 먹구름', bossSub: '미러볼 위에서 삐져서 불을 꺼 뒀어요 — 물감으로 꾸며 주자!',
+        { title: '2층 · 미러볼 안개 등장!', sub: '노랑 별 안개도 같이 와요 — 리듬 타일을 밟아요!' },
+        { title: '3층 · 유성 별까지 셋이 다 같이!', sub: '유성 별은 한 번은 통! 두 번째에 퐁' }],
+      bossName: '삐진 미러볼', bossSub: '줄에 매달린 채 삐져서 불을 꺼 뒀어요 — 물감으로 꾸며 주자!', // 11-27 쎄니 보스 재작업: 먹구름 → 거대 꺼진 미러볼(대표 지시)
       theme: { bg: 0x3a2a66, sky: 0xdcc8ff, ground: 0x6a4fb0, pulse: 0xc39bff },
-      rule: { slowpoke: 3, tiles: true, boss: { var: 'cloud', cute: true, gauge: '물감', order: [['rain', 'roll'], ['rain', 'slam', 'roll'], ['rain', 'roll', 'slam', 'rain']], tint: 0x8e8ca8, sqY: 0.8, floatY: 1.4, friendTint: 0xf2e8ff, word: '물감 톡!', friendWord: '친구가 됐어요!', friendSub: '웃는 구름이 미러볼을 반짝 켜 줬어요' } },
+      rule: { slowpoke: 3, tiles: true, boss: { var: 'cloud', cute: true, gauge: '물감', order: [['rain', 'roll'], ['rain', 'slam', 'roll'], ['rain', 'roll', 'slam', 'rain']], tint: 0xd8dcee, sqY: 0.8, floatY: 1.4, friendTint: 0xf2e8ff, word: '물감 톡!', friendWord: '친구가 됐어요!', friendSub: '웃는 미러볼이 댄스홀을 반짝 켜 줬어요', words: { rain: '반짝 소나기!', nudge: '빙글 바람 후~' } } }, // 11-27 말만 추가 · 걸음: A spin · B zig · C dash
       npc: '꼬마 조명 로봇·미러볼' },
     // 11-24 베리 「베리 과수원」(정본 3장: 내리막 언덕·씨앗 안개(열매 위 작은 방울) · 끝 = 귀여운 보스 「잠꾸러기 큰 나무」 → 열매 전부 익음). 꽃으로 깨워 주면 친구, 게이지는 「꽃」 말, 하품 바람·떨어지는 잎뿐 아프게 X
     //  seed: 무리마다 씨앗 안개 1마리(작고 열매 위에 콩콩) — 퐁 하면 「열매 익었다!」 + 꽃 자국(밟으면 회복, flowers.js)
@@ -106,8 +107,8 @@
       music: { floor: 'bgm_orchard_berri', boss: 'bgm_boss_cute', end: 'sfx_maraca_berri' }, // floor = 임시 루프(AI 음악팀 신곡 오면 assets/audio/bgm_orchard_berri.mp3 만), end = 마라카스 샤카샤카 + 톡(합성)
       floors: [null,
         { title: '1층 · 열매 익는 소리가 멈췄어요!', sub: '씨앗 안개가 열매 위에 콩콩 — 퐁 하면 열매가 익어요' },
-        { title: '2층 · 안개 뭉치가 언덕을 굴러와요!', sub: '터지면 둘로 나뉘어요' },
-        { title: '3층 · 메아리 안개 등장!', sub: '한 번은 통! 두 번째에 퐁' }],
+        { title: '2층 · 열매 송이 뭉치가 언덕을 굴러와요!', sub: '씨앗 안개도 같이 와요 — 터지면 열매 둘로' },
+        { title: '3층 · 새싹 메아리까지 셋이 다 같이!', sub: '새싹은 한 번은 통! 두 번째에 퐁' }],
       bossName: '잠꾸러기 큰 나무', bossSub: '과수원 가운데서 쿨쿨 자느라 열매가 안 익어요 — 꽃으로 깨워 주자!',
       theme: { bg: 0xffe3ee, sky: 0xfff4f9, ground: 0x9ad27a, pulse: 0xff9ccb },
       rule: { seed: true, boss: { var: 'tree', cute: true, gauge: '꽃', order: [['rain', 'slam'], ['rain', 'slam', 'roll'], ['rain', 'slam', 'roll', 'rain']], tint: 0x8fb86a, sqY: 1.18, friendTint: 0xffc8de, word: '꽃 톡!', friendWord: '고마워, 친구!', friendSub: '큰 나무가 기지개 — 열매가 전부 익었어요' } },

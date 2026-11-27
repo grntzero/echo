@@ -545,6 +545,16 @@
     AR.setMap('pipe');
   };
   // 던전 맵 바꿔 끼우기(그림만): 그룹 보이기·바닥 재질·가운데 소품. 없는 id = 광장
+  // 11-27 층별 맵 모습(그림만): n = 0 광장/끔 · 1~3 층 · 4 보스전. 맵 rec.fl = { 이름: Group } 켜고 끄기(rec.flShow[n]) + 빛 배율(rec.flLook[n] = { hemi, sun, fog }) — game.js 가 startFloor·startBossIntro·applyTheme 에서 부름
+  AR.flK = { hemi: 1, sun: 1, fog: 0 }; AR.floorN = 0;
+  AR.setFloorLook = function (n) {
+    AR.floorN = n | 0;
+    for (const k in AR.maps) { const r = AR.maps[k]; if (!r.fl) continue; const on = (k === AR.mapId && r.flShow && r.flShow[AR.floorN]) || []; for (const key in r.fl) r.fl[key].visible = on.indexOf(key) >= 0; }
+    const m = AR.map, L = (m && m.flLook && m.flLook[AR.floorN]) || null;
+    AR.flK = { hemi: L && L.hemi != null ? Math.max(0.9, L.hemi) : 1, sun: L && L.sun != null ? L.sun : 1, fog: L && L.fog ? L.fog : 0, sunCol: L ? L.sunCol : null };
+    try { const R = TG.R, G = TG.G; if (R && R.sun && G && G.sunBase) { R.sun.intensity = G.sunBase * AR.flK.sun; R.sun.color.set(G.sunCol || 0xfff1dc); if (AR.flK.sunCol) R.sun.color.lerp(new T.Color(AR.flK.sunCol), 0.45); } } catch (e) { /* 무시 */ } // 햇빛 색은 단계 색에 층 색을 45% 만 섞음(단계 1·5·10 색 차이는 유지)
+    if (m && m.onFloor) m.onFloor(AR.floorN);
+  };
   AR.setMap = function (id) {
     if (!AR.maps[id]) id = 'pipe';
     AR.mapId = id;

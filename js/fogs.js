@@ -174,10 +174,17 @@
       faces: [{ brow: true, mouth: 'pout' }, { brow: 'worry', mouth: 'o', sweat: true }, { brow: 'worry', lid: 0.26, mouth: 'wavy', sweat: true }] });
     // 11-24 귀여운 보스(쎄니 「삐진 먹구름」·베리 「잠꾸러기 큰 나무」, 계획 v8 11쪽): 같은 포도송이 모양·같은 규칙 틀, 재질(표정 3벌)만 바꿔 끼움 — 새 3D 없음(크레딧 0)
     //  먹구름: 삐짐(눈썹↘·삐죽) → 놀람(물감 맞음) → 웃음(친구) / 큰 나무: 쿨쿨(눈 감김) → 하품(반쯤 뜸) → 웃음. 무서운 얼굴 X
-    const bossMatCloud = fogMat({ color: 0x8e8ca8, key: 'bosscloud', rim: 0.45, spec: 0, flashCol: 'vec3(0.92, 0.82, 1.05)', gy0: '0.0', gy1: '3.9', cx: '0.0', cy: '2.015', cz: '0.13', sep: 0.27, ey: 0.1, size: 0.205,
+    const bossMatCloud = fogMat({ color: 0xd8dcee, key: 'bosscloud', rim: 0.55, spec: 0.6, flashCol: 'vec3(1.0, 0.9, 1.05)', gy0: '0.0', gy1: '4.6', cx: '0.0', cy: '2.3', cz: '-0.3', sep: 0.3, ey: 0.1, size: 0.205,
       sel: 'uMood', fUni: ' uniform float uMood;', uni: { uMood: bossMood }, faces: [{ brow: true, mouth: 'pout' }, { mouth: 'o' }, { mouth: 'smile' }] });
     const bossMatTree = fogMat({ color: 0x8fb86a, key: 'bosstree', rim: 0.4, spec: 0, flashCol: 'vec3(1.0, 0.86, 0.92)', gy0: '0.0', gy1: '3.9', cx: '0.0', cy: '2.9', cz: '0.1', sep: 0.27, ey: 0.1, size: 0.205, // 11-24 얼굴 중심 = 나무 수관 가운데(looks.js bossC)
       sel: 'uMood', fUni: ' uniform float uMood;', uni: { uMood: bossMood }, faces: [{ lid: 0.78, mouth: 'flat' }, { lid: 0.3, mouth: 'o' }, { mouth: 'smile' }] });
+    // 11-27 보스 재작업(대표: 보스가 던전마다 완전히 달라야): 얼굴도 보스마다 — 세포 뜀틀(졸린 큰 눈·동그란 입, 얼굴 중심 뒤로 빼 뜀틀 앞면에 크게) · 허조교 북(찡그린 눈·일자 입, 북 앞면) · 모쉬 스피커(우퍼 속 큰 눈 둘·물결 입 = 이퀄라이저)
+    const bossMatGym = fogMat({ color: 0xe9d3a8, key: 'bossgym', rim: 0.3, spec: 0.1, flashCol: 'vec3(1.0, 0.9, 0.85)', gy0: '0.0', gy1: '4.4', cx: '0.0', cy: '2.4', cz: '-0.6', sep: 0.36, ey: 0.08, size: 0.3,
+      sel: 'uMood', fUni: ' uniform float uMood;', uni: { uMood: bossMood }, faces: [{ lid: 0.5, mouth: 'o' }, { lid: 0.2, brow: 'worry', mouth: 'o', sweat: true }, { lid: 0.6, brow: 'worry', mouth: 'wavy', sweat: true }] });
+    const bossMatDrill = fogMat({ color: 0x8a8f5a, key: 'bossdrill', rim: 0.35, spec: 0.1, flashCol: 'vec3(0.95, 0.95, 0.8)', gy0: '0.0', gy1: '3.2', cx: '0.0', cy: '1.6', cz: '-0.9', sep: 0.34, ey: 0.1, size: 0.34,
+      sel: 'uMood', fUni: ' uniform float uMood;', uni: { uMood: bossMood }, faces: [{ lid: 0.55, brow: true, mouth: 'flat' }, { lid: 0.25, brow: 'worry', mouth: 'o', sweat: true }, { lid: 0.5, brow: 'worry', mouth: 'wavy', sweat: true }] });
+    const bossMatDark = fogMat({ color: 0x3c4066, key: 'bossdark', rim: 0.5, spec: 0.3, flashCol: 'vec3(0.7, 0.95, 1.05)', gy0: '0.0', gy1: '5.0', cx: '0.0', cy: '1.35', cz: '-0.9', sep: 0.46, ey: 0.0, size: 0.3,
+      sel: 'uMood', fUni: ' uniform float uMood;', uni: { uMood: bossMood }, faces: [{ brow: true, mouth: 'wavy' }, { brow: 'worry', mouth: 'o', sweat: true }, { brow: 'worry', lid: 0.3, mouth: 'wavy', sweat: true }] });
     const boss = new T.Mesh(bgeo, bossMat);
     boss.castShadow = true;
     const bg2 = new T.Group(); bg2.add(boss); bg2.visible = false; scene.add(bg2);
@@ -215,7 +222,7 @@
       transparent: true, depthWrite: false,
     }));
     band.visible = false; band.renderOrder = 4; band.frustumCulled = false; band.position.y = 0.09; scene.add(band);
-    F.bossObj = { group: bg2, mesh: boss, mat: bossMat, mats: { def: bossMat, cloud: bossMatCloud, tree: bossMatTree }, mood: bossMood, pgr, parts, partsMat, partsSpin: true, shells, beads, band, spin: 0, bubS: [0, 0, 0], bubOn: [true, true, true], cap: [new T.Vector3(), new T.Vector3(), new T.Vector3()] };
+    F.bossObj = { group: bg2, mesh: boss, mat: bossMat, mats: { def: bossMat, cloud: bossMatCloud, tree: bossMatTree, gym: bossMatGym, drill: bossMatDrill, dark: bossMatDark }, mood: bossMood, pgr, parts, partsMat, partsSpin: true, shells, beads, band, spin: 0, bubS: [0, 0, 0], bubOn: [true, true, true], cap: [new T.Vector3(), new T.Vector3(), new T.Vector3()] };
     F.lookId = 'pipe'; F.setLevelLook(null);
     // 회색 고리 (좁혀 오는 구역)
     F.zone = makeZone(scene);
@@ -601,6 +608,20 @@
         // 안개: SEFO 쪽으로 둥실둥실 (째깍 원판 안에서는 느려짐)
         let sp = u.spd * (u.spawnT < 0.5 ? 0.3 : 1) * u.slowK;
         if (!playing) sp = 0;
+        // 11-27 걸음 7종(js/looks.js walk · 규칙, 난수 0 — 시간 t·박자 bph·자리만): float = 기존 둥실 · march = 허조교 줄 행진(u.line 그대로) · hop 박마다 한 칸 · zig S 자 · dash 짧게 달렸다 멈춤 · spin 제자리 빙글 → 접근 · roll 똑바로 굴러오다 벽에 튕김. 평균 빠르기는 float 과 비슷하게(hop 2·sin² 평균 1, dash 1.5/0.36, spin 0.15/2.2)
+        const wk = u.walk; let sx = dx / d, sz = dz / d; u.spinK = 0;
+        if (wk === 'hop') { sp *= 2 * Math.pow(Math.sin(Math.PI * bph), 2); }
+        else if (wk === 'zig') { const w = Math.sin(t * 2.8 + u.ph) * 0.75, nx = sx - sz * w, nz = sz + sx * w, nl = Math.hypot(nx, nz) || 1; sx = nx / nl; sz = nz / nl; }
+        else if (wk === 'dash') { const c = (t + u.ph) % 1.6; sp *= c < 0.9 ? 1.5 : 0.36; }
+        else if (wk === 'spin') { const c = (t + u.ph) % 2.2; if (c < 1.3) { sp *= 0.15; u.spinK = 1; } else sp *= 2.2; }
+        else if (wk === 'roll' && playing && u.spawnT >= 0.5) {
+          const want = Math.atan2(dx, dz); if (u.rdir == null) u.rdir = want;
+          const ur = u.r * u.scale * 0.8;
+          if ((u.x > AR.bx - ur - 0.05 && Math.sin(u.rdir) > 0) || (u.x < -AR.bx + ur + 0.05 && Math.sin(u.rdir) < 0)) u.rdir = -u.rdir; // 동서 벽에 튕김
+          if ((u.z > AR.bz - ur - 0.05 && Math.cos(u.rdir) > 0) || (u.z < -AR.bz + ur + 0.05 && Math.cos(u.rdir) < 0)) u.rdir = Math.PI - u.rdir; // 남북 벽에 튕김
+          u.rdir += TG.clamp(TG.angDiff(u.rdir, want), -0.55 * dt, 0.55 * dt); // 천천히 주인공 쪽으로 틂(결국 도착)
+          sx = Math.sin(u.rdir); sz = Math.cos(u.rdir); sp *= 1.15;
+        }
         if (u.kind === 'clump') {
           u.dashT -= dt * u.slowK;
           if (u.dashT <= 0 && !u.dash && d < 10 && playing) { u.dash = 0.0001; u.sqT = 0.13; }
@@ -610,9 +631,11 @@
           u.ripT -= dt;
           if (u.ripT <= 0) { u.ripT = 0.55; TG.FX.emit(TG.FX.CELL.ring, u.x, u.y + 0.1, u.z, { life: 0.5, size: 0.9, size1: 2.6, color: [0.8, 1.3, 2.2], alpha: 0.7 }); }
         }
-        u.vx = TG.damp(u.vx, (dx / d) * sp, u.dash ? 8 : 2.2, dt); u.vz = TG.damp(u.vz, (dz / d) * sp, u.dash ? 8 : 2.2, dt);
+        if (u.dash) { sx = dx / d; sz = dz / d; } // 뭉치 돌진은 곧장(걸음 무관)
+        u.vx = TG.damp(u.vx, sx * sp, u.dash ? 8 : 2.2, dt); u.vz = TG.damp(u.vz, sz * sp, u.dash ? 8 : 2.2, dt);
         const base = u.kind === 'clump' ? 0.12 : 0.95;
         if (u.line) u.y = TG.damp(u.y, base + Math.abs(Math.sin(t * Math.PI / 0.517)) * 0.42, 12, dt); // 11-24 허조교 줄 안개: 구령 박자(116 BPM = 0.517초)에 맞춰 통통 행진(그림 쪽 높이만)
+        else if (wk === 'hop' && playing) u.y = TG.damp(u.y, base + Math.sin(Math.PI * bph) * 0.55, 14, dt); // 11-27 hop: 박자에 맞춰 뛰어오름(그림 쪽 높이만)
         else u.y = TG.damp(u.y, base + Math.sin(t * 2.6 + u.ph) * (u.kind === 'clump' ? 0.08 : 0.16), 6, dt);
         u.yaw += TG.angDiff(u.yaw, Math.atan2(dx, dz)) * (1 - Math.exp(-6 * dt));
         const hitR = u.r * u.scale + 0.5;
@@ -697,7 +720,7 @@
     if (b.pushCd > 0 || P.resting) return;
     b.pushCd = 0.8; b.nudges = (b.nudges || 0) + 1;
     P.kx = (dx / d) * 6; P.kz = (dz / d) * 6; P.kick(-3);
-    TG.FX.text(b.variant === 'tree' ? '하품 바람 후~' : '주르륵~', P.x, 3.4, P.z, 'word');
+    TG.FX.text((b.cfg && b.cfg.words && b.cfg.words.nudge) || (b.variant === 'tree' ? '하품 바람 후~' : '주르륵~'), P.x, 3.4, P.z, 'word');
     TG.FX.ring(P.x, P.z, { r0: 0.4, r1: 2.2, dur: 0.35, color: b.variant === 'tree' ? 0xcdebb0 : 0xd9c6ff, width: 0.2 });
     TG.A.play('sfx_bonk', { gain: 0.2, rate: 1.5 });
     if (G.onNudge) G.onNudge(b);
@@ -706,7 +729,7 @@
     b.pat = null; b.drops.length = 0; b.roll = 0; b.wob = 0;
     teles.forEach((q) => { q.on = false; q.m.visible = false; });
   }
-  function bossDrop(b, x, z, delay, spawn) { F.tele('circle', x, z, { r: DROP_R, dur: delay }); b.drops.push({ x, z, t: delay, spawn }); }
+  function bossDrop(b, x, z, delay, spawn, fake) { F.tele('circle', x, z, { r: DROP_R, dur: delay }); b.drops.push({ x, z, t: delay, spawn, fake: !!fake }); } // 11-27 fake = 모쉬 「거울 분신」 가짜 큐브(내려앉는 그림만, 닿아도 안 아픔·안개 안 나옴)
   // 굴러갈 길: 벽에 닿으면 멈추거나(bounce=false) 튕겨서 남은 거리만큼 더 감
   function rollPath(x, z, dir, len, bounce) {
     const segs = []; let sx = Math.sin(dir), sz = Math.cos(dir);
@@ -733,34 +756,38 @@
     pt.dir = dir; pt.sx = b.x; pt.sz = b.z; // (봇이 읽는 값)
     pt.segs.forEach((q) => F.tele('line', q.x, q.z, { dir: q.dir, len: q.len + hr * 0.9, w: hr * 2, dur: pt.pre }));
   }
+  // 11-27 보스 행동 3종 추가(규칙 — 난수 호출 수는 바탕 행동과 같게): call4 = 세포 「체조 구령 4박」(squeeze 예고 2초 = 4박) · horn3 = 허조교 「기상 나팔 3연타」(slam + 예고 원 2개 동시) · decoy = 모쉬 「거울 분신」(rain 에서 진짜 1 + 가짜 큐브). 말풍선은 던전표 rule.boss.words(그림만)
   function bossBegin(b, type, P) {
-    const sk = b.spdK, hr = b.r * b.scale + 0.6;
+    const sk = b.spdK, hr = b.r * b.scale + 0.6, W = (b.cfg && b.cfg.words) || {}, say = (k, def) => { const w = W[k] || def; if (w) TG.FX.text(w, b.x, 5.6 * b.scale + 0.6, b.z, 'word'); };
     if (type === 'roll' || type === 'rolls') {
       const chain = type === 'rolls';
       b.pat = { type: 'roll', left: chain ? 3 : 1, len: chain ? 14 : 17, bounce: b.phase >= 2 };
       rollAim(b, P, 0.8);
-      if (chain) TG.FX.text('데굴데굴 세 번!', b.x, 5.6 * b.scale + 0.6, b.z, 'word');
-    } else if (type === 'rain') { // 안개 비: SEFO 자리 + 가는 길 앞(2단계부터) + 둘레
-      const n = 3 + Math.min(2, b.phase), pre = 0.8 / sk, spots = [[P.x, P.z]];
+      if (chain) say('rolls', '데굴데굴 세 번!'); else say('roll', null);
+    } else if (type === 'rain' || type === 'decoy') { // 안개 비: SEFO 자리 + 가는 길 앞(2단계부터) + 둘레
+      const decoy = type === 'decoy', n = 3 + Math.min(2, b.phase), pre = 0.8 / sk, spots = [[P.x, P.z]];
       if (b.phase >= 1) spots.push([P.x + P.vx * 0.7, P.z + P.vz * 0.7]);
-      if (b.rainLine) { const la = Math.atan2(P.x - b.x, P.z - b.z); while (spots.length < n) { const k = spots.length - 1; spots.push([P.x + Math.sin(la) * k * 2.6 + TG.srr(-0.4, 0.4), P.z + Math.cos(la) * k * 2.6 + TG.srr(-0.4, 0.4)]); } TG.FX.text('줄 맞춰 비!', b.x, 5.6 * b.scale + 0.6, b.z, 'word'); } // 11-24 허조교 구령 변형: 안개 비가 행진 줄처럼 한 줄로(난수 호출 수는 같음 — TG.sr 2번)
+      if (b.rainLine) { const la = Math.atan2(P.x - b.x, P.z - b.z); while (spots.length < n) { const k = spots.length - 1; spots.push([P.x + Math.sin(la) * k * 2.6 + TG.srr(-0.4, 0.4), P.z + Math.cos(la) * k * 2.6 + TG.srr(-0.4, 0.4)]); } say('rain', '줄 맞춰 비!'); } // 11-24 허조교 구령 변형: 안개 비가 행진 줄처럼 한 줄로(난수 호출 수는 같음 — TG.sr 2번)
       else while (spots.length < n) { const a = TG.sr() * 6.28, r = TG.srr(2.5, 5); spots.push([P.x + Math.cos(a) * r, P.z + Math.sin(a) * r]); }
-      if (b.cute) TG.FX.text(b.variant === 'tree' ? '잎이 우수수!' : '작은 비 주르륵!', b.x, 5.6 * b.scale + 0.6, b.z, 'word'); // 11-24 귀여운 보스: 비·잎(안개 방울이 내려앉음, 닿아도 살짝 밀기만)
-      spots.forEach(([x, z], i) => bossDrop(b, TG.clamp(x, -18, 18), TG.clamp(z, -12, 12), pre + i * 0.12, i < 3));
+      if (b.cute) say('rain', b.variant === 'tree' ? '잎이 우수수!' : '작은 비 주르륵!'); // 11-24 귀여운 보스: 비·잎(안개 방울이 내려앉음, 닿아도 살짝 밀기만)
+      else if (decoy) say('decoy', '거울 분신!'); else say('rain', null);
+      spots.forEach(([x, z], i) => bossDrop(b, TG.clamp(x, -18, 18), TG.clamp(z, -12, 12), pre + i * 0.12, decoy ? i === 0 : i < 3, decoy && i > 0)); // 거울 분신: 진짜(안개 나옴·아픔)는 첫 자리 하나, 나머지는 가짜 큐브
       b.pat = { type: 'rain', t: 0, end: pre + n * 0.12 + 0.3 };
       b.sq = 0.2;
-    } else if (type === 'slam') {
+    } else if (type === 'slam' || type === 'horn3') {
       const pre = 1.0 / sk, tx = TG.clamp(P.x, -16, 16), tz = TG.clamp(P.z, -10.5, 10.5);
       b.pat = { type: 'slam', t: 0, pre, sx: b.x, sz: b.z, tx, tz, done: false };
       F.tele('circle', tx, tz, { r: hr + 0.2, dur: pre + 0.16 });
+      if (type === 'horn3') { const la = Math.atan2(P.x - b.x, P.z - b.z); for (let i = 1; i <= 2; i++) bossDrop(b, TG.clamp(P.x + Math.sin(la) * i * 3.0, -18, 18), TG.clamp(P.z + Math.cos(la) * i * 3.0, -12, 12), pre + 0.16 + i * 0.1, false); say('horn3', '나팔 3연타!'); } // 기상 나팔 3연타: 쿵 + 앞쪽으로 예고 원 2개(난수 0)
+      else say('slam', null);
       b.sq = 0.2;
-    } else { // 'squeeze' | 'combo'
-      const pa = Math.atan2(P.x - b.x, P.z - b.z), g = TG.srr(0.78, 1.02);
+    } else { // 'squeeze' | 'combo' | 'call4'
+      const pa = Math.atan2(P.x - b.x, P.z - b.z), g = TG.srr(0.78, 1.02), call4 = type === 'call4';
       const R1 = b.r * b.scale * 0.9, R0 = TG.clamp(Math.hypot(P.x - b.x, P.z - b.z) + 3, 7.5, 12); // 늘 SEFO 조금 바깥에서 시작(화면 안에 보이게)
-      b.pat = { type: 'squeeze', t: 0, pre: 1.0 / sk, dur: (R0 - R1) / (3.8 * sk), cx: b.x, cz: b.z, R0, R1, hw: 0.36,
+      b.pat = { type: 'squeeze', t: 0, pre: (call4 ? 2.0 : 1.0) / sk, dur: (R0 - R1) / (3.8 * sk), cx: b.x, cz: b.z, R0, R1, hw: 0.36,
         gaps: [pa + g, pa - g, pa + Math.PI], rain: type === 'combo' ? [1.0 / sk + 0.1, 1.0 / sk + 1.2] : null };
       b.pat.r = b.pat.pr = b.pat.R1;
-      TG.FX.text(type === 'combo' ? '고리에 안개 비까지!' : '고리가 조여 와요!', b.x, 5.6 * b.scale + 0.6, b.z, 'word');
+      say(type, type === 'combo' ? '고리에 안개 비까지!' : call4 ? '하나, 둘, 셋, 넷! 고리!' : '고리가 조여 와요!');
       TG.A.play('sfx_steam', { gain: 0.5, rate: 0.8 });
     }
   }
@@ -869,9 +896,9 @@
         const q = b.drops[i]; q.t -= dt;
         if (q.t > 0) continue;
         if (q.spawn) { const u = F.spawn('bubble', q.x, q.z, { small: true }); if (u) { u.spawnT = 0.3; u.y = 7; u.scale = 1; } }
-        TG.FX.ring(q.x, q.z, { r0: 0.5, r1: 2.6, dur: 0.4, color: 0xe6eaf4, width: 0.22 });
-        TG.FX.popBurst(q.x, 1.0, q.z, 1.2);
-        if (Math.hypot(P.x - q.x, P.z - q.z) < DROP_R) { if (b.cute) bossNudge(b, P, G, P.x - q.x, P.z - q.z, Math.hypot(P.x - q.x, P.z - q.z) || 1); else { const h = P.hurt(q.x, q.z); if (h) G.onHurt(b, h); } } // 귀여운 보스의 비·잎은 살짝 밀기만(안개 방울은 그대로 나옴 — 바닥 안개만 아프게, v8 11쪽)
+        TG.FX.ring(q.x, q.z, { r0: 0.5, r1: 2.6, dur: 0.4, color: q.fake ? 0x9ff4ff : 0xe6eaf4, width: 0.22 });
+        TG.FX.popBurst(q.x, 1.0, q.z, 1.2, q.fake ? [0.7, 1.4, 1.6] : null);
+        if (!q.fake && Math.hypot(P.x - q.x, P.z - q.z) < DROP_R) { if (b.cute) bossNudge(b, P, G, P.x - q.x, P.z - q.z, Math.hypot(P.x - q.x, P.z - q.z) || 1); else { const h = P.hurt(q.x, q.z); if (h) G.onHurt(b, h); } } // 귀여운 보스의 비·잎은 살짝 밀기만(안개 방울은 그대로 나옴 — 바닥 안개만 아프게, v8 11쪽)
         TG.FX.shake(0.08); TG.A.play('sfx_pop', { rate: 0.7, gain: 0.6 });
         b.drops.splice(i, 1); i--;
       }
@@ -945,6 +972,14 @@
       o.group.rotation.y = TG.damp(o.group.rotation.y, Math.atan2(P.rx - b.x, P.rz - b.z) * 0.6, 3, dt);
       o.group.rotation.x = b.roll ? Math.sin(b.roll) * 0.25 : TG.damp(o.group.rotation.x, 0, 6, dt);
       o.group.rotation.z = b.wob ? b.wob : TG.damp(o.group.rotation.z, 0, 8, dt);
+      { // 11-27 보스 재작업: 보스별 몸짓(그림만 — 규칙 값은 읽기만). 뜀틀 = 접혔다 펴짐(세로 숨쉬기) · 북 수레 = 행진 들썩 · 스피커 = 비트 쿵쿵(베이스 펄스)+등장 때 위에서 내려옴 · 먹구름 = 옆으로 스르르 · 나무 = 바람에 살랑
+        const v = b.variant, gk = b.state === 'gather' ? 1 - Math.min(1, b.t / 1.6) : 0, S = o.group.scale;
+        if (v === 'gym') { const q = Math.sin(t * 2.4) * 0.07; S.y *= 1 + q; S.x *= 1 - q * 0.6; S.z *= 1 - q * 0.6; }
+        else if (v === 'drill') { const m = Math.abs(Math.sin(t * 3.6)); o.group.position.y += m * 0.22; o.group.rotation.z += Math.sin(t * 7.2) * 0.04; }
+        else if (v === 'dark') { const q = Math.max(0, Math.sin(t * 8.4)) ** 3 * 0.06; S.x *= 1 + q; S.z *= 1 + q; o.group.position.y += gk * gk * 7; o.group.rotation.y += gk * 6; }
+        else if (v === 'cloud') { o.group.rotation.z += Math.sin(t * 1.3) * 0.07; o.group.position.y += Math.sin(t * 1.3) * 0.12; } // 11-27 미러볼: 줄에 매달려 좌우로 흔들
+        else if (v === 'tree') { o.group.rotation.z += Math.sin(t * 0.9) * 0.035; o.group.rotation.x += Math.sin(t * 0.6) * 0.02; }
+      }
       const fl = Math.max(Math.max(0, b.flash - 0.3) * 0.5, b.state === 'fight' && b.inv > 0 ? 0.22 + 0.16 * Math.sin(t * 22) : 0); // 맞을 때는 0.1초·밝기만 살짝 / // 단계 전환 멈칫 동안은 깜빡깜빡(안 맞는 때)
       o.mat.userData.flash.value = fl; // 밝은 보라로 약하게 (SEFO를 덮지 않게)
       // 단계 겉모습 (규칙 값 b.phase 를 읽기만 함): 표정 · 고리 조임 빠르기 · 남은 음표 방울 수
@@ -1036,7 +1071,7 @@
       }
       // 안개: 얼굴이 늘 화면 쪽을 보게(몸은 조금만 돌고 살짝 젖힘), 동공만 SEFO 쪽을 봄 → 위에서 내려다봐도 눈이 읽힘
       const rel = TG.angDiff(0, u.yaw), dy = Math.sin(rel) * 0.8, la = rel - dy;
-      tmpE.set(-0.34, dy, 0, 'YXZ');
+      tmpE.set(-0.34, dy + (u.spinK ? t * 7 : 0), u.walk === 'roll' ? Math.sin(t * 9 + u.ph) * 0.14 : 0, 'YXZ'); // 11-27 spin 걸음은 제자리에서 빙글, roll 은 좌우로 기우뚱(그림만)
       tmpQ.setFromEuler(tmpE);
       tmpM.compose(tmpP.set(ux, uy, uz), tmpQ, tmpS.set(s * sx, s * sy, s * sx));
       const lkx = TG.clamp(Math.sin(la) * 1.5, -1, 1), lky = TG.clamp(-Math.cos(la), -0.25, 1) * 0.8 - 0.1, ph = (u.id * 0.371) % 1;

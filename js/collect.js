@@ -67,7 +67,7 @@
   K.effOf = (id) => { const s = K.split(id); if (s.idx === 'U') return K.EFFECTS.findIndex((e) => e.id === K.byId[s.artist].set.eff); return K.parts(s.idx).eff; }; // 유니크 능력치 = 그 아티스트 응원 종류 [대표 확인]
 
   // ── 저장 ──
-  const blank = () => ({ v: 1, c: {}, u: {}, eq: [null, null, null], day: '', dayN: 0, got: 0, boxSeen: 0, swaps: 0, ups: 0, updated: 0, alt: {} }); // 11-26 alt: 유니크 연출 고르기(세포 { sefo: 'kids' } = 「세포키즈 출동!」, 없으면 1번 「필승 모드!」) — js/unique.js U.altOf/U.pick
+  const blank = () => ({ v: 1, c: {}, u: {}, eq: [null, null, null], day: '', dayN: 0, got: 0, boxSeen: 0, swaps: 0, ups: 0, updated: 0, alt: {}, betaGift: 0 }); // 11-26 alt: 유니크 연출 고르기(세포 { sefo: 'kids' } = 「세포키즈 출동!」, 없으면 1번 「필승 모드!」) — js/unique.js U.altOf/U.pick
   K.data = blank();
   K.load = function () {
     let d = null; try { d = JSON.parse(localStorage.getItem(K.KEY) || 'null'); } catch (e) { d = null; }
@@ -236,6 +236,28 @@
     h += '</svg>';
     return (artCache[key] = h);
   };
+  // ── 11-27 베타 카드(대표 지시 — 톱니 500 베타 선물(wallet.js)과 같은 방식): 베타(TG.beta())일 때만 · 한 기기 1번(localStorage ez_beta_cards + 카드 데이터 betaGift 칸) · 정식 오픈 땐 안 줌.
+  //   15종 = 주인공 5명 × 서로 다른 카드 3장(1단 기본 틀, 의상·배경·효과가 다 다른 칸) + 그중 1종(세포 첫 칸)은 2장 더 = ×3(「3장 바꾸기」 시험용). 유니크 X.
+  //   고정 목록(난수 0 — 규칙 난수·기록 재생과 무관) · 하루 6장 상한(dayN)에 안 셈. TG.W.wipe() 가 ez_beta_cards 도 지워 다시 받음. 이미 연습 끝낸 기기도 다음에 켤 때 받음(파일 끝에서 K.load 뒤 1번).
+  K.BETA_KEY = 'ez_beta_cards';
+  K.BETA_HEROES = ['sefo', 'gunner', 'moshee', 'sseni', 'berri'];
+  K.BETA_LIST = (() => { const a = []; K.BETA_HEROES.forEach((h, k) => { [[0, k % 4, k % 5], [1, (k + 1) % 4, (k + 2) % 5], [2, (k + 2) % 4, (k + 4) % 5]].forEach(([o, p, e]) => a.push(K.cid(h, o * 20 + p * 5 + e))); }); return a; })();
+  K.BETA_TRIPLE = K.BETA_LIST[0];       // 이 1종만 ×3
+  K.giftNew = null;                     // 이번에 켤 때 받았으면 { kinds, cards } — 광장 쎌 말풍선 한 번(hud.js sselTitleStart)
+  K.betaGift = function () {
+    if (!(TG.beta && TG.beta())) return null;
+    let seen = true; try { seen = !!localStorage.getItem(K.BETA_KEY); } catch (e) { /* 무시 */ }
+    if (seen || (K.data.betaGift | 0)) return null;
+    let n = 0;
+    K.BETA_LIST.forEach((id) => { const s = K.split(id), reps = id === K.BETA_TRIPLE ? 3 : 1; for (let r = 0; r < reps; r++) { K.give(s.artist, s.idx, 1); n++; } });
+    K.data.betaGift = K.BETA_LIST.length; K.save();
+    try { localStorage.setItem(K.BETA_KEY, '1'); } catch (e) { /* 무시 */ }
+    K.giftNew = { kinds: K.BETA_LIST.length, cards: n };
+    try { if (TG.H && TG.H.hubRefresh && TG.H.title && !TG.H.title.classList.contains('hide')) TG.H.hubRefresh(true, false); } catch (e) { /* 광장 아직 없음 */ }
+    return K.giftNew;
+  };
+  K.betaMsg = () => '베타 카드 ' + K.BETA_LIST.length + '장 받았어! 「카드」 단추를 눌러 봐~'; // 게임 안 쎌 반말(세계관 정본)
   K.probText = () => '받을 때 등급: 1단 ' + K.PROB[0] + '% · 2단 ' + K.PROB[1] + '% · 3단 ' + K.PROB[2] + '% · 4단 ' + K.PROB[3] + '% · 유니크 ' + K.PROB[4] + '%(그 아티스트 던전에서만 · 보장 없음)';
   K.load();
+  K.betaGift();
 })();

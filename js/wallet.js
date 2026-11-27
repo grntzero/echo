@@ -102,7 +102,7 @@
   W.save = function () { W.data.updated = Date.now(); try { localStorage.setItem(W.KEY, JSON.stringify(W.data)); } catch (e) { /* 무시 */ } };
   W.reset = function () { try { localStorage.removeItem(W.KEY); } catch (e) { /* 무시 */ } W.data = blank(); return W.snap(); };
   W.wipe = function () { // 정식 오픈 때: 베타 지갑 기록 전부 지움(ez_w1_* 만)
-    const ks = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf(W.PREFIX) === 0) ks.push(k); } ks.forEach((k) => localStorage.removeItem(k)); } catch (e) { /* 무시 */ }
+    const ks = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf(W.PREFIX) === 0) ks.push(k); } ks.forEach((k) => localStorage.removeItem(k)); localStorage.removeItem('ez_beta_cards'); } catch (e) { /* 무시 */ } // 11-27 베타 카드 15장 표시도 같이 지움(다시 켜면 다시 받음, 세는 수엔 안 넣음) — 톱니 500(ez_beta_gift)은 예전대로 남김
     W.data = blank(); return ks.length;
   };
   // 오늘(기기 날짜, YYYY-MM-DD). 시험용 덮어쓰기 W._today

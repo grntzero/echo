@@ -25,7 +25,7 @@
     { budget: 120, cap: 28, iv: [1.15, 0.8], grp: [4, 7], clump: 5, echo: 0, tick: 0, spd: 1.65, split: 2, cocoonAt: 0.45, title: '2층 · 안개 뭉치가 굴러와요!', sub: '터지면 둘로 나뉘어요' },
     { budget: 150, cap: 36, iv: [1.0, 0.7], grp: [5, 8], clump: 6, echo: 4, tick: 8, spd: 1.85, split: 3, cocoonAt: 0.45, title: '3층 · 메아리 안개 등장!', sub: '한 번은 통! 튕겨요. 두 번째에 퐁' },
   ];
-  const REC_V = 7;                  // 입력 기록 판 번호(11-18 리믹스 카드 28종·전용 최대 1장 뽑기 → 7. 11-17 3차: 고함 둘레 2.0·보스 0.95·세포체조 층 전체·보스 16·충전 0.85 → 6. 11-16 오후 밸런스 개편 → 4, 11-17 필살기·평타 개편(세포체조 길이·모쉬/허조교 평타·쎄니 구역) → 5: v4 이하는 재생 안 함)
+  const REC_V = 8;                  // 입력 기록 판 번호(11-27 던전 개선: 걸음 7종·보스 행동 3종·모쉬 깜깜 안개 뭉치 슬롯 → 8, v7 이하 재생 안 함. 11-18 리믹스 카드 28종·전용 최대 1장 뽑기 → 7. 11-17 3차: 고함 둘레 2.0·보스 0.95·세포체조 층 전체·보스 16·충전 0.85 → 6. 11-16 오후 밸런스 개편 → 4, 11-17 필살기·평타 개편(세포체조 길이·모쉬/허조교 평타·쎄니 구역) → 5: v4 이하는 재생 안 함)
   const XP0 = 10, XP_STEP = 24;      // 레벨업 필요 음표: XP0 + XP_STEP × (레벨 − 1)
   const REROLL_MAX = 2;             // 11-18 대표: 리믹스 카드 「다시 뽑기」 한 판에 2번(모두 같은 조건 — 순위 공정). 기록 cards 에 −1 로 들어가 재현 때 같은 순서로 다시 뽑음
   const REST_HEAL = 2;              // 쉼터 「소리 회복」: 2칸 (전에는 가득)
@@ -228,9 +228,10 @@
       const bg = mixC(t.bg, L.bg, k).clone();
       R.scene.background.copy(bg); R.renderer.setClearColor(bg);
       R.hemi.color.copy(mixC(t.sky, L.sky, k * 0.8)).multiplyScalar(0.84); R.hemi.groundColor.copy(mixC(t.ground, L.ground, k * 0.8)).multiplyScalar(0.8);
-      R.sun.color.set(L.sun); R.sun.intensity = 2.3 * L.sunK;
+      R.sun.color.set(L.sun); R.sun.intensity = 2.3 * L.sunK; G.sunBase = R.sun.intensity; G.sunCol = L.sun;
       if (R.scene.fog) { R.scene.fog.color.copy(bg); R.scene.fog.near = 36 - 20 * L.fog; R.scene.fog.far = L.fog < 0.01 ? 500 : 220 - 220 * L.fog; }
       if (TG.AR.setMap) TG.AR.setMap(d ? d.id : 'pipe'); // 11-24 던전별 맵(바닥·벽·소품·배경) 바꿔 끼움 — 광장(null)은 박동탑 광장
+      if (TG.AR.setFloorLook) TG.AR.setFloorLook(d ? (TG.AR.floorN || 0) : 0); // 11-27 층별 맵 모습(그림만): 광장이면 끔, 던전이면 지금 층 것 다시(맵 바꾼 뒤·재생 때)
       if (TG.AR.floorMat) TG.AR.floorMat.color.copy(mixC(0xffffff, L.floor, k));
       if (TG.AR.pulse) TG.AR.pulse.material.color.set(t.pulse).multiplyScalar(1.3);
       if (TG.F.setLevelLook) TG.F.setLevelLook(d ? L : null);
@@ -302,6 +303,7 @@
   function startFloor(n) {
     const f = FL(n);
     G.phase = 'floor'; G.floor = n; G.fogPop = 0; G.floorDone = false; G.cocoonDone = false;
+    if (TG.AR.setFloorLook) TG.AR.setFloorLook(n); // 11-27 층별 맵 변화(그림만 — js/maps.js floorLook: 조명·켜지는 소품)
     G.spawnT = 1.0; G.clumpT = 3; G.echoT = 2.5; G.tickT = 6;
     G.hemiT = 1.35; G.camZoom = 1;
     G.lastPopT = G.time; G.arrowU = null; G.arrowSaid = false; // 남은 안개 화살표 시계 다시(층마다)
@@ -341,15 +343,14 @@
       const u = line ? TG.F.spawn(kind, x - Math.sin(la) * i * 1.15, z - Math.cos(la) * i * 1.15) : TG.F.spawn(kind, x + Math.cos(a) * r, z + Math.sin(a) * r);
       if (!u) continue;
       u.spawnT = -i * 0.08;
+      u.walk = TG.LOOKS && TG.LOOKS.walk ? TG.LOOKS.walk(DUNGEON.id, kind) : 'float'; // 11-27 걸음 7종(js/looks.js walk 표 — 규칙, fogs.js F.update. 기록 dun 으로 재생 때 같음)
+      if (RULE.dark && kind === 'clump' && G.floor >= 2 && F_count('dark') < 2) { u.dark = true; G.darkN = (G.darkN || 0) + 1; } // 11-27 모쉬 「깜깜 큐브」 = 2층 B(뭉치 슬롯): 튼튼함 5·둘로 나뉨 그대로, 살아 있으면 불이 어두워짐(그림) — 동시 2마리까지(옛 「무리마다 깜깜 안개 1마리 더」는 뺌)
       if (line) { u.line = true; u.spd = kind === 'bubble' ? 3.1 : u.spd; u.ph = 0; G.lineN = (G.lineN || 0) + 1; } // 줄은 같은 빠르기(앞뒤가 흩어지지 않게)
       if (RULE.mirror && kind === 'bubble') { G.mirrorSeq = (G.mirrorSeq || 0) + 1; if (G.mirrorSeq % RULE.mirror === 0) { u.mirror = true; G.mirrorN = (G.mirrorN || 0) + 1; } } // 11-24 모쉬 「거울 안개」: 3마리 중 1마리(차례 — 시드·기록과 무관한 고정 순서)
       if (RULE.slowpoke && kind === 'bubble') { G.slowSeq = (G.slowSeq || 0) + 1; if (G.slowSeq % RULE.slowpoke === 0) { u.slow = true; u.scale = 1.5; u.hp = u.maxHp = 3; u.spd *= 0.55; G.slowN = (G.slowN || 0) + 1; } } // 11-24 쎄니 「느림보 안개」: 3마리 중 1마리 — 크고(1.5) 느리고(×0.55) 튼튼함 3, 맞을수록 작아짐(hitUnit)
     }
     if (RULE.seed && kind === 'bubble' && n >= 2 && F_count('seed') < 4) { // 11-24 베리 「씨앗 안개」: 무리마다 1마리(작음 0.7·튼튼함 1, 열매 위에 콩콩 — 그림) — 퐁 하면 열매 익음 + 꽃 자국(onPop)
       const u = TG.F.spawn('bubble', x + Math.cos(0.8) * 1.6, z + Math.sin(0.8) * 1.6, { small: true }); if (u) { u.spawnT = -0.2; u.seed = true; u.scale = 0.7; u.spd = 2.6; G.seedN = (G.seedN || 0) + 1; }
-    }
-    if (RULE.dark && kind === 'bubble' && G.floor >= 2 && F_count('dark') < 2 && n >= 3) { // 11-24 모쉬 「깜깜 안개」: 2층부터 무리마다 1마리 더(크고 튼튼함 2) — 살아 있으면 불이 어두워지고(그림만) 퐁 하면 불 켜짐
-      const u = TG.F.spawn('bubble', x + Math.sin(la + 1.57) * 1.4, z + Math.cos(la + 1.57) * 1.4); if (u) { u.spawnT = -0.3; u.dark = true; u.hp = u.maxHp = 2; u.scale = 1.25; u.spd = 2.2; G.darkN = (G.darkN || 0) + 1; }
     }
   }
   const F_count = (flag) => { let n = 0; for (const u of TG.F.list) if (u.state === 'live' && u[flag]) n++; return n; };
@@ -435,6 +436,7 @@
   // ── 보스 등장: 기계가 잠깐 느려짐 → 가운데 큰 안개가 뭉침 → 이름 띠 → 카메라 줌 → SEFO가 보스 쪽을 봄 ──
   function startBossIntro() {
     G.phase = 'bossIntro'; G.bossStarted = true; G.biT = 0; G.biStage = 0;
+    if (TG.AR.setFloorLook) TG.AR.setFloorLook(4); // 11-27 보스전 맵 모습(스포트라이트·LED 원 등, 그림만)
     G.machSlow = true; G.hemiT = 1.1; G.camFocusK = kidK(0.5);
     P().noHurt = 6;
     try { TG.F.bossObj.mat.color.set(TG.hero.kid ? 0x8a85ac : 0x77729a); } catch (e) { /* 보스 재질 없음 */ } // 아이로 하면 보스 회색을 한 단계 밝게 (기획서 ④ 안전 5)
@@ -465,8 +467,8 @@
     if (cute) { FX.trauma = Math.min(FX.trauma || 0, 0.3); TG.A.play('sfx_big', { rate: 0.95, gain: 0.4 }); }
     else { TG.A.play('sfx_big', { rate: 0.6, gain: TG.hero.kid ? 0.55 : 0.9 }); if (!TG.hero.kid) TG.A.boom(); } // 아이로 하면 큰 효과음 줄임 (놀람 방지)
     TG.H.showBanner(DUNGEON.bossName || '큰 침묵 안개', DUNGEON.bossSub || '노래를 꽁꽁 숨긴 안개예요', cute ? 'gold name' : 'boss name', 2.2);
-    if (cute) SSEL('smile', RULE.boss.var === 'tree' ? '큰 나무가 잠들었어요! 꽃으로 깨워 주자!' : '먹구름이 삐졌어요! 물감으로 꾸며 주자!', 3.0);
-    else SSEL('surprise', RULE.boss && RULE.boss.var === 'drill' ? '헉, 헬멧 쓴 큰 안개야! 구령에 맞춰 굴러와!' : RULE.boss && RULE.boss.var === 'dark' ? '헉, 큐브가 꺼졌어! 불을 켜 주자!' : '헉, 엄청 큰 안개야! 같이 해 보자!', 3.0);
+    if (cute) SSEL('smile', RULE.boss.var === 'tree' ? '큰 나무가 잠들었어요! 꽃으로 깨워 주자!' : '미러볼이 삐졌어요! 물감으로 꾸며 주자!', 3.0);
+    else SSEL('surprise', RULE.boss && RULE.boss.var === 'drill' ? '헉, 헬멧 쓴 큰 안개야! 구령에 맞춰 굴러와!' : RULE.boss && RULE.boss.var === 'dark' ? '헉, DJ 큐브가 꺼졌어! 불을 켜 주자!' : RULE.boss && RULE.boss.var === 'gym' ? '헉, 뜀틀 위에 큰 안개야! 구령 4박에 조심!' : '헉, 엄청 큰 안개야! 같이 해 보자!', 3.0);
     G.camZoom = 0.74; G.camFocusK = kidK(0.85); // 잠깐 줌 (아이 주인공은 보스만 — 아이는 원경, 기획서 ④ 안전 3)
     G.after(84, () => { if (G.phase === 'bossIntro') { G.phase = 'boss'; G.camZoom = 1.12; G.camFocusK = 0.45; G.hemiT = 1.35; } });
   };
@@ -643,7 +645,7 @@
       const tree = b.variant === 'tree', cfg = RULE.boss || {};
       FX.hitstop(60); FX.shake(0.25); TG.R.bloomPulse = 0.5; vib('bossPhase'); G.friendN = (G.friendN || 0) + 1;
       TG.A.play('sfx_big', { gain: 0.5, rate: 1.25 }); TG.A.syn('rescue'); TG.A.play('sfx_pick', { rate: 1.4, gain: 0.8 });
-      SSEL('cheer', tree ? '열매가 전부 익었다! 고마워, 큰 나무!' : '먹구름이 웃었다! 미러볼 반짝!', 3.0);
+      SSEL('cheer', tree ? '열매가 전부 익었다! 고마워, 큰 나무!' : '미러볼이 웃었다! 댄스홀 반짝!', 3.0);
       const by = 2.4 + (b.floatY || 0);
       for (let i = 0; i < 3; i++) FX.ring(b.x, b.z, { r0: 1, r1: 12 + i * 3, dur: 0.8 + i * 0.15, color: tree ? [0xff9ccb, 0xffe36b, 0xcdebb0][i] : [0xc39bff, 0xffffff, 0xff9ccb][i], width: 0.14, delay: i * 0.12 });
       if (tree) { for (let i = 0; i < 40; i++) { const a = (i / 40) * 6.283 + TG.fr() * 0.3, r = TG.fra(1.5, 4.2); FX.emit(i % 2 ? FX.CELL.heart : FX.CELL.flower, b.x + Math.cos(a) * r, by + TG.fra(0.5, 3.2), b.z + Math.sin(a) * r, { vx: Math.cos(a) * 1.2, vy: TG.fra(-0.5, 1.5), vz: Math.sin(a) * 1.2, life: TG.fra(1.4, 2.2), size: TG.fra(0.6, 0.9), size1: 0.5, color: i % 2 ? [2.4, 0.7, 0.8] : [2.3, 1.2, 1.6], grav: 1.5, drag: 0.8, vrot: TG.fra(-2, 2), rot: 0, pop: true }); } } // 열매 톡톡 익음
@@ -1765,7 +1767,7 @@
       G.darkK = TG.damp(G.darkK || 0, Math.min(1, nd * 0.5 + bd * 0.6), 2.5, rdt);
       if (G.darkK < 0.002 && (G.darkK0 || 0) < 0.002) G.darkK = 0; G.darkK0 = G.darkK;
     }
-    TG.R.hemi.intensity = TG.damp(TG.R.hemi.intensity, (G.hemiT || 1.35) * (1 - 0.42 * (G.darkK || 0)) * (G.lvHemiK || 1), 2.5, rdt); // 11-24 단계 분위기 배율(밤 0.9 까지만)
+    TG.R.hemi.intensity = TG.damp(TG.R.hemi.intensity, (G.hemiT || 1.35) * (1 - 0.42 * (G.darkK || 0)) * (G.lvHemiK || 1) * (TG.AR.flK ? TG.AR.flK.hemi : 1), 2.5, rdt); // 11-27 × 층별 맵 모습 반구광 배율(0.9 이상) // 11-24 단계 분위기 배율(밤 0.9 까지만)
     if (RULE.tiles && isPlay() && !G.paused && G.phase !== 'shelter') { // 11-24 쎄니 「리듬 타일」(그림만): 걸으면 발밑 타일이 박자 색으로 켜짐
       G.tileT = (G.tileT || 0) + vis; if (p.speed > 0.6 && G.tileT >= 0.22) { G.tileT = 0; G.tileN = (G.tileN || 0) + 1; TG.FX.ring(p.x, p.z, { r0: 0.3, r1: 1.5, dur: 0.38, color: [0xc39bff, 0x8ff4ff, 0xff9ccb, 0xfff0a8][G.tileN % 4], width: 0.22, hdr: 1.1, alpha: 0.8 }); }
     }

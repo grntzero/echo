@@ -289,6 +289,7 @@
           auto ? ['ok', '소리 방울은 저절로! 넌 음표만 주워~'] : ['wink', touch ? '「소리」 꾹! 끌면 그쪽으로 나가지!' : '마우스 꾹! 가리키는 쪽으로 나가지!'],
           ['cheer', '준비됐지? 「시작」 눌러 봐!'],
         ];
+        if (titleI === 0 && TG.K && TG.K.giftNew) { lines[0] = ['cheer', TG.K.betaMsg()]; TG.K.giftNew = null; } // 11-27 베타 카드 15장 받은 첫 광장: 첫 줄 한 번만
         const [f, s] = lines[titleI % lines.length];
         txt.textContent = s; H.sselFace(box, f, true);
         if (!titleSaid[s] && H.sselVoice(s)) titleSaid[s] = 1;   // 11-14 목소리: 타이틀이 보이는 동안 줄마다 한 번만 (소리 켜지기 전 줄은 다음 바퀴에)
