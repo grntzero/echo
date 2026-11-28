@@ -210,6 +210,18 @@
     H.rankRender(); H.show(H.rankPick, true); return true;
   };
   H.rankClose_ = function () { H.show(H.rankPick, false); H.hubRefresh(hubTut, hubBack); };
+  // 11-28 로그인 칸: 구글 클라이언트 ID(js/net_config.js googleClientId)가 들어오면 구글 버튼을 바로 그림(누르면 구글 창 → ID 토큰 → 서버 로그인).
+  //   비어 있으면 구글 버튼 숨김 + 안내. 「로그인」 단추는 시험 서버(--dev-login)일 때만 「시험 로그인」으로. 실제 구글 연결은 배포 때 설정값만 넣으면 됨
+  const loginOk = (n) => () => { H.rankSay(n.canMigrate ? '이 기기 카드·톱니를 계정으로 옮길까?' : '로그인 끝! 닉네임을 정해 줘~', 'smile'); H.rankRender(); };
+  const loginNo = (e) => H.rankSay((e && e.info && e.info.message) || '로그인이 안 됐어. 다시 해 볼까?', 'bow');
+  H.rankLoginRender = function () {
+    const n = TG.net, dev = !!(n.info && n.info.dev), g = !!(n.googleReady && n.googleReady());
+    H.show(H.rankLoginBtn, dev); { const sp = H.rankLoginBtn.querySelector('span'); if (sp) sp.textContent = g ? '시험 로그인' : '로그인'; }
+    H.show(H.rankGsi, g);
+    if (g && !H.rankGsi.dataset.on) { H.rankGsi.dataset.on = '1'; n.showGoogleButton(H.rankGsi, (tok) => n.login({ idToken: tok, ageAck: true }).then(loginOk(n)).catch(loginNo)); }
+    const no = $('rankLoginNo'); if (no) H.show(no, !g && !dev);
+    return g ? 'google' : dev ? 'dev' : 'none';
+  };
   H.rankLogin_ = function () {
     const n = TG.net;
     if (n.info && n.info.dev) { const name = W_prompt('시험용 이름(영문·숫자 2~24자)'); if (!name) return; n.login(name).then(() => { H.rankSay(n.canMigrate ? '이 기기 카드·톱니를 계정으로 옮길까?' : '로그인 끝! 닉네임을 정해 줘~', 'smile'); H.rankRender(); }).catch((e) => H.rankSay((e.info && e.info.message) || '로그인이 안 됐어. 다시 해 볼까?', 'bow')); return; }
@@ -228,7 +240,8 @@
     const n = TG.net; if (!n || !n.on || !H.rankPick) return;
     const logged = n.active(), me = n.me;
     H.show(H.rankLogin, !logged); H.show(H.rankMig, logged && !!n.canMigrate); H.show(H.rankNick, logged && !n.canMigrate && !!(me && me.needNick));
-    if (!logged) H.rankSay('순위판에 오르려면 로그인이 필요해! 14세 미만은 보호자 계정으로 해 줘~', 'basic');
+    if (!logged && H.rankLoginRender) H.rankLoginRender();
+    if (!logged) H.rankSay(n.googleReady && n.googleReady() || (n.info && n.info.dev) ? '순위판에 오르려면 로그인이 필요해! 14세 미만은 보호자 계정으로 해 줘~' : '로그인은 아직 준비 중이야. 지금은 이 기기 저장으로 놀 수 있어!', 'basic');
     else if (n.canMigrate) H.rankSay('이 기기 카드·톱니를 계정으로 옮길까? 한 번만 할 수 있어!', 'smile');
     else if (me && me.needNick) H.rankSay('닉네임을 정해 줘! 실제 이름·전화번호는 쓰지 마~', 'smile');
     // 오늘의 3던전 + 남은 횟수 + 가기
@@ -237,6 +250,9 @@
       let h = '<div class="rkHead"><b>오늘의 3던전</b><small>' + rk.date + ' · ' + TG.LEVELS[rk.lv].name + ' 단계 · 던전마다 하루 ' + ((n.info && n.info.rank && n.info.rank.triesPerDun) || 5) + '번</small></div><div class="rkDuns">';
       rk.duns.forEach((id, i) => { const d = TG.DUNGEONS[id]; const left = rk.tries ? rk.tries[id] : null; h += '<button type="button" class="dunB rkD' + (logged && left === 0 ? ' lock' : '') + '" data-dun="' + id + '" style="--dc:' + d.color + '"><i></i><span class="tx"><b>' + (i + 1) + '. ' + d.name + '</b><small>' + d.ownerName + ' 던전' + (left == null ? '' : ' · 남은 ' + left + '번') + '</small></span></button>'; });
       H.rankToday.innerHTML = h + '</div>';
+      { const RL = TG.relay, left = RL && RL.left ? RL.left() : null, box = $('rankRelay'); // 11-28 3던전 이어 달리기(js/relay.js) — 한 번에 던전마다 1번씩 씀 · 기간 탭 줄 오른쪽
+        if (box) box.innerHTML = RL && RL.start ? '<div class="rkRelay"><button type="button" id="rkRelayBtn" class="bub yel' + (logged && left === 0 ? ' off' : '') + '"><span class="ol">3던전 이어 달리기 · 약 10분</span></button><small>' + (!logged ? '로그인하면 할 수 있어' : left == null ? '' : left > 0 ? '오늘 ' + left + '번 더 · 던전 사이 5초 쉼' : '오늘은 다 했어 · 내일 06시에 새 3던전') + '</small></div>' : ''; }
+      { const rb = $('rkRelayBtn'); if (rb) rb.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.1); if (!logged) { H.rankSay('먼저 로그인해 줘!', 'ok'); return; } if (me && me.needNick) { H.rankSay('닉네임 먼저!', 'ok'); return; } if (rb.classList.contains('off')) { H.rankSay('오늘 이어 달리기는 다 했어! 내일 06시에 또 하자~', 'ok'); return; } if (!TG.relay.start()) H.rankSay('지금은 못 가. 잠깐 뒤에 다시!', 'bow'); }); }
       H.rankToday.querySelectorAll('.rkD').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); TG.A.ui(1.0); if (!logged) { H.rankSay('먼저 로그인해 줘!', 'ok'); return; } if (me && me.needNick) { H.rankSay('닉네임 먼저!', 'ok'); return; } if (b.classList.contains('lock')) { H.rankSay('이 던전은 오늘 다 했어! 내일 06시에 또 하자~', 'ok'); return; } H.rankGo(b.dataset.dun); }));
     }
     H.rankTabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.p === rankPeriod));
@@ -260,12 +276,34 @@
   H.netResult = function (r) {
     if (!H.rNet || !H.lastRes) return;
     const R = H.lastRes;
+    if (!R.net || (r.id && R.net.runId && r.id !== R.net.runId)) return; // 11-28 지금 결과 화면의 판이 아니면(이어 달리기 앞 다리·지난 판) 덮지 않음
+    R.net.status = r.status;
     if (r.status === 'verified') {
       const rw = r.reward || {};
-      if (R.net && R.net.mode === 'rank') H.rNet.textContent = '확인 끝! ' + (r.score ? r.score.toLocaleString('en-US') + '점 — 순위판에 올라갔어!' : '쓰러졌지만 톱니는 챙겼어! 다시 해 보자~');
-      else { H.rNet.textContent = '확인 끝! 받은 것이 들어왔어~'; R.gear = rw.gear || null; R.card = rw.card || null; R.fall = rw.fall || null; if (rw.stamp) R.stamp = Object.assign(R.stamp || {}, rw.stamp, { nextName: rw.stamp.next ? TG.LEVELS[rw.stamp.next].name : null }); H.renderReward(R); }
+      if (R.net && R.net.mode === 'rank') { // 11-28 끝까지 모드: 점수 세어 올라감 + 다리 톱니 톡
+        const W = TG.W, g = rw.gear && W ? '<span class="rnGear">' + W.html(rw.gear, 20) + '</span>' : '';
+        H.rNet.innerHTML = r.score ? '확인 끝! <b class="rnScore" data-to="' + (r.score | 0) + '">0</b>점 — 순위판에 올라갔어! ' + g : '쓰러졌지만 톱니는 챙겼어! ' + g;
+        H.rewardAnim(H.rNet);
+      } else { H.rNet.textContent = '확인 끝! 받은 것이 들어왔어~'; R.gear = rw.gear || null; R.card = rw.card || null; R.fall = rw.fall || null; if (rw.stamp) R.stamp = Object.assign(R.stamp || {}, rw.stamp, { nextName: rw.stamp.next ? TG.LEVELS[rw.stamp.next].name : null }); H.renderReward(R); H.rewardAnim(); }
     } else H.rNet.textContent = '이 기록은 올릴 수 없었어. 다음 판에 또 해 보자!';
   };
+  // 11-28 서버 보상 받는 애니(결과 화면): 줄마다 차례로 톡 튀어 들어옴(0.22초 간격) · 톱니 ×N·점수는 0부터 세어 올라감 · 카드는 그 차례에 뒤집힘 · 줄마다 「톡」 소리.
+  //   그림·소리만(받은 값은 서버가 준 그대로). el 을 주면 그 안만(끝까지 모드 rNet). 돌려줌 = 움직인 줄 수
+  H.rewardAnim = function (el) {
+    const rows = el ? [el] : [].concat(Array.from(H.rGear ? H.rGear.querySelectorAll('.gl') : []), Array.from(H.rCard && !H.rCard.classList.contains('hide') ? H.rCard.querySelectorAll('.rcOne, .capped') : []));
+    rows.forEach((row, i) => {
+      const d = 0.12 + i * 0.22; row.classList.remove('netIn'); void row.offsetWidth; row.style.setProperty('--nd', d.toFixed(2) + 's'); row.classList.add('netIn');
+      setTimeout(() => { try { TG.A.play('sfx_pick', { rate: 1 + Math.min(i, 6) * 0.12, gain: 0.7 }); } catch (e) { /* 무시 */ } }, d * 1000);
+      row.querySelectorAll('.gw b, .rnScore').forEach((b) => { const to = b.dataset.to != null ? +b.dataset.to : +(String(b.textContent).replace(/[^0-9]/g, '') || 0), pre = b.classList.contains('rnScore') ? '' : '×'; b.dataset.to = to; countUp(b, to, pre, d * 1000, b.classList.contains('rnScore') ? 900 : 600); });
+    });
+    if (H.result) { const p = H.result.querySelector('.panel'); if (p) { p.classList.remove('netGot'); void p.offsetWidth; p.classList.add('netGot'); } }
+    return rows.length;
+  };
+  function countUp(b, to, pre, delay, dur) {
+    b.textContent = pre + '0'; const t0 = performance.now() + delay;
+    const step = (now) => { const k = Math.max(0, Math.min(1, (now - t0) / dur)), e = 1 - Math.pow(1 - k, 3); b.textContent = pre + Math.round(to * e).toLocaleString('en-US'); if (k < 1 && b.isConnected) requestAnimationFrame(step); else b.textContent = pre + to.toLocaleString('en-US'); };
+    requestAnimationFrame(step);
+  }
 
   H.colOpen = function (artist) {
     if (!H.title || H.title.classList.contains('hide') || !TG.K) return false;
@@ -693,11 +731,12 @@
   H.showResult = function (r) {
     H.resTitle.textContent = r.clear ? '노래를 되찾았어요!' : '다음에 다시!\n모은 건 그대로예요'; // 긴 제목은 두 줄 (패널 밖으로 안 나가게)
     if (H.rStamp) { // 11-24 단계 도장: 던전 · 단계 깸 → 다음 단계 열림 · 첫 클리어 상자(글)
-      const st = r.stamp; H.show(H.rStamp, !!(r.clear && r.lv && !r.tut && (r.dungeon !== 'pipe' || !!st))); // 베타 깃발이면 연습 던전 도장도
+      const st = r.stamp; H.show(H.rStamp, !!(r.clear && r.lv && !r.tut && !r.rank && (r.dungeon !== 'pipe' || !!st))); // 11-28 대표: 끝까지 모드는 도장 줄 없음 // 베타 깃발이면 연습 던전 도장도
       if (r.clear && st) H.rStamp.textContent = r.dungeonName + ' · ' + r.lvName + ' 도장!' + (st.first && st.nextName ? ' 다음 「' + st.nextName + '」 열림' : st.first ? ' 금 도장!' : '') + (st.box && !r.gear ? '\n첫 클리어 상자: ' + st.box : ''); // 11-24 지갑 지급이 있으면 상자 내용은 아래 「받은 톱니」 줄에(아이콘) — 두 번 안 적음
       else if (r.clear) H.rStamp.textContent = r.dungeonName + ' · ' + r.lvName + ' 도장!';
     }
     H.lastRes = r; H.renderReward(r);
+    if (H.rNet) { H.rNet.classList.remove('netIn'); const pn = H.result.querySelector('.panel'); if (pn) pn.classList.remove('netGot'); } // 11-28 지난 판 받는 애니 표시 지움
     if (H.rNet) { H.show(H.rNet, !!r.net); if (r.net) H.rNet.textContent = (TG.net && TG.net.say && TG.net.say.pending) || '기록 확인 중이야, 곧 올라갈 거야~'; } // 11-27 서버 판: 톱니·카드·점수는 검산 뒤(js/net.js) — 그동안 「확인 중」
     H.rTime.textContent = TG.fmtTime(r.time);
     H.rFog.textContent = r.fogs;

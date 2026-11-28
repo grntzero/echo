@@ -46,7 +46,7 @@
     { id: 'sseni', name: '쎄니', col: '#a46bff', dun: 'sseni_hall', play: true, kid: true, set: { eff: 'star', pct: 2 } },
     { id: 'berri', name: '베리', col: '#ff7fb6', dun: 'berri_orchard', play: true, kid: true, set: { eff: 'petal', pct: 2 } },
     { id: 'poy', name: '포이', col: '#00c853', dun: 'poy_dial', set: { eff: 'rainbow', pct: 2 } },
-    { id: 'loki', name: '로키', col: '#ff9f1c', dun: 'loki_train', set: { eff: 'note', pct: 3 } },
+    { id: 'loki', name: '로키', col: '#ff9f1c', dun: 'loki_train', set: { eff: 'star', pct: 2 } }, // 11-28 대표 결정: 30장 응원 「음표 +3%」 → 「이동 +2%」(별 = 이동 속도, cards.js recalc spdMul). 유니크 능력치도 응원 종류를 따라 이동(K.effOf)
     { id: 'killaton', name: '킬라톤', col: '#2e7d32', dun: 'killaton_jungle', set: { eff: 'note', pct: 3 } },
     { id: 'annaconda', name: '애나콘다', col: '#ff5fb8', dun: null, set: { eff: 'note', pct: 3 } },
     { id: 'haena', name: '해나', col: '#ffb300', dun: null, set: { eff: 'note', pct: 3 } },

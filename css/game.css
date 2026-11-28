@@ -707,3 +707,117 @@ body.hasCard #result .ptitle { font-size: calc(20px * var(--s)); margin-top: cal
 @keyframes rpIn { from { transform: translateX(40px) scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes rpHop { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
 body.closeup #resPop { top: 14%; }
+
+/* 11-28 카드2단계화면: 3던전 이어 달리기(js/relay.js) · 이어 달리기 끝 화면 · 서버 보상 받는 애니 · 구글 로그인 자리 · 작은 화면 줄 넓이 */
+.rkDuns { grid-template-columns: repeat(3, minmax(0, 1fr)); } /* 작은 화면에서 셋째 던전 단추가 패널 밖으로 안 나가게(이름은 … 으로) */
+.rkDuns .dunB { min-width: 0; }
+#rankPick .rankPanel { overflow-x: hidden; }
+#rankNote { padding-right: calc(92px * var(--s)); } /* 오른쪽 아래 쎌이 설명 줄을 가리지 않게 */
+.rkTabRow { display: flex; align-items: center; gap: calc(8px * var(--s)); }
+.rkTabRow #rankTabs { flex: none; }
+#rankRelay { flex: 1 1 auto; min-width: 0; display: flex; justify-content: flex-end; }
+.rkRelay { display: flex; align-items: center; justify-content: flex-end; gap: calc(2px * var(--s)) calc(6px * var(--s)); min-width: 0; }
+.rkRelay .bub { font-size: calc(14px * var(--s)); padding: calc(4px * var(--s)) calc(12px * var(--s)); white-space: nowrap; flex: none; }
+.rkRelay .bub.off { filter: grayscale(0.85); opacity: 0.7; }
+.rkRelay small { font-size: calc(10.5px * var(--s)); opacity: 0.8; word-break: keep-all; min-width: 0; text-align: right; line-height: 1.15; max-width: calc(110px * var(--s)); }
+#rankGsi { min-height: calc(40px * var(--s)); display: flex; align-items: center; }
+#rankGsi.hide { display: none; }
+#rankLoginNo { font-size: calc(13px * var(--s)); color: #7a5cff; word-break: keep-all; }
+.rkRow { grid-template-columns: calc(30px * var(--s)) minmax(0, 1fr) auto calc(38px * var(--s)); }
+/* 판 도중 진행 칩(미니맵 아래) */
+#relayChip { position: absolute; right: max(env(safe-area-inset-right), calc(10px * var(--s))); top: calc(108px * var(--s)); display: flex; flex-direction: column; align-items: flex-end; gap: 1px; background: rgba(27,20,36,0.72); color: #fff; border: 2px solid var(--ink); border-radius: calc(12px * var(--s)); padding: calc(3px * var(--s)) calc(9px * var(--s)); font-size: calc(12px * var(--s)); line-height: 1.15; pointer-events: none; max-width: calc(170px * var(--s)); }
+#relayChip b { color: #ffd23f; font-size: calc(13px * var(--s)); }
+#relayChip span { display: flex; gap: 4px; }
+#relayChip span i { width: calc(10px * var(--s)); height: calc(10px * var(--s)); border-radius: 50%; border: 2px solid #fff; background: transparent; }
+#relayChip span i.now { background: #ffd23f; } #relayChip span i.ok { background: #5fd068; } #relayChip span i.fall { background: #9a8fb0; }
+#relayChip small { opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+/* 결과 화면 진행 줄 */
+body.relayOn #result .btns { display: none; }
+#rRelay { margin: calc(2px * var(--s)) auto calc(4px * var(--s)); width: calc(372px * var(--s)); max-width: 100%; } /* 받은 카드 줄과 같은 폭 = 결과 패널 폭 그대로(오른쪽 쎌이 화면 안에) */
+#rRelay .rlHead { display: flex; align-items: baseline; justify-content: center; gap: calc(8px * var(--s)); font-size: calc(13px * var(--s)); }
+#rRelay .rlHead b { color: #7a5cff; } #rRelay .rlHead span { font-weight: 900; } #rRelay .rlHead small { opacity: 0.7; }
+.rlLegs { display: flex; align-items: stretch; justify-content: center; gap: calc(2px * var(--s)); }
+.rlArr { font-style: normal; align-self: center; opacity: 0.5; font-size: calc(16px * var(--s)); }
+.rlLeg { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: calc(4px * var(--s)); background: #fff; border: 2px solid rgba(27,20,36,0.35); border-radius: calc(10px * var(--s)); padding: calc(2px * var(--s)) calc(5px * var(--s)); text-align: left; }
+.rlLeg i { flex: none; font-style: normal; width: calc(18px * var(--s)); height: calc(18px * var(--s)); border-radius: 50%; background: var(--dc); border: 2px solid var(--ink); color: #fff; font-size: calc(11px * var(--s)); display: flex; align-items: center; justify-content: center; font-weight: 900; }
+.rlTx { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
+.rlTx b { font-size: calc(11px * var(--s)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rlTx small { font-size: calc(9.5px * var(--s)); opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rlLeg.ok { border-color: #2f9a3a; background: #eefbe9; } .rlLeg.fall { background: #f1eef5; } .rlLeg.now { border-color: var(--ink); box-shadow: 0 0 0 2px #ffd23f; } .rlLeg.wait { opacity: 0.7; } .rlLeg.skip { opacity: 0.5; }
+.rlBtns { display: flex; justify-content: center; gap: calc(8px * var(--s)); margin-top: calc(6px * var(--s)); }
+.rlBtns .bub { font-size: calc(16px * var(--s)); padding: calc(6px * var(--s)) calc(14px * var(--s)); }
+.rlCd { font-style: normal; display: inline-block; min-width: 1.3em; margin-left: 4px; background: #fff; color: var(--ink); border-radius: 99px; text-shadow: none; font-size: 0.85em; }
+/* 이어 달리기 끝 화면 */
+#relayEnd { z-index: 23; }
+#relayEnd .rlPanel { margin-left: 30vw; width: min(60vw, calc(400px * var(--s))); min-width: 0; text-align: center; padding-top: calc(10px * var(--s)); padding-bottom: calc(12px * var(--s)); }
+#relayEnd .ptitle { margin: calc(6px * var(--s)) 0 calc(2px * var(--s)); }
+#relayEnd.allClear .ptitle { color: #ffd23f; animation: rlCheer 0.9s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes rlCheer { 0% { transform: scale(0.3) rotate(-8deg); opacity: 0; } 70% { transform: scale(1.12) rotate(2deg); opacity: 1; } 100% { transform: none; } }
+#rlSub { font-size: calc(13px * var(--s)); color: #fff; margin-bottom: calc(4px * var(--s)); word-break: keep-all; }
+#rlList { background: #fff; border: 3px solid var(--ink); border-radius: calc(12px * var(--s)); padding: calc(2px * var(--s)) calc(8px * var(--s)); }
+.rlRow { display: grid; grid-template-columns: calc(24px * var(--s)) minmax(0, 1fr) auto calc(78px * var(--s)); align-items: center; gap: calc(6px * var(--s)); padding: calc(3px * var(--s)) 0; border-bottom: 1px dashed rgba(27,20,36,0.2); font-size: calc(13px * var(--s)); text-align: left; }
+.rlRow:last-child { border-bottom: 0; }
+.rlN { width: calc(20px * var(--s)); height: calc(20px * var(--s)); border-radius: 50%; background: var(--dc); border: 2px solid var(--ink); color: #fff; font-weight: 900; font-size: calc(11px * var(--s)); display: flex; align-items: center; justify-content: center; }
+.rlNm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 800; }
+.rlSt { font-size: calc(11px * var(--s)); opacity: 0.8; white-space: nowrap; }
+.rlS { text-align: right; font-size: calc(11px * var(--s)); white-space: nowrap; } .rlS b { font-size: calc(14px * var(--s)); color: #e5352b; font-variant-numeric: tabular-nums; }
+.rlRow.ok .rlSt { color: #1f7a2a; opacity: 1; } .rlRow.skip { opacity: 0.55; }
+.rlWait { opacity: 0.7; }
+#rlSum { display: flex; justify-content: center; flex-wrap: wrap; gap: calc(4px * var(--s)) calc(12px * var(--s)); margin: calc(5px * var(--s)) 0 calc(2px * var(--s)); font-size: calc(13px * var(--s)); }
+#rlSum b { color: #e5352b; }
+#rlMine { font-size: calc(14px * var(--s)); color: #fff; min-height: 1.2em; word-break: keep-all; }
+#rlLeft { font-size: calc(11px * var(--s)); opacity: 0.75; word-break: keep-all; }
+#relayEnd .btns { margin-top: calc(6px * var(--s)); display: flex; justify-content: center; gap: calc(8px * var(--s)); }
+#relayEnd .btns .bub { font-size: calc(17px * var(--s)); }
+#rlSsel { position: absolute; left: calc(100% - 16px * var(--s)); bottom: calc(-6px * var(--s)); display: flex; flex-direction: column; align-items: flex-start; gap: calc(2px * var(--s)); }
+#rlSsel .sselImg { height: min(calc(92px * var(--s)), 24vh); }
+#rlSsel .gtxt { width: max-content; max-width: calc(128px * var(--s)); text-align: left; }
+#rlSsel .gtxt span { font-size: calc(13px * var(--s)); }
+#rlConf { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+#rlConf i { position: absolute; top: -6vh; width: calc(10px * var(--s) * var(--k)); height: calc(16px * var(--s) * var(--k)); border-radius: 3px; border: 1.5px solid rgba(27,20,36,0.6); animation: rlFall 3.4s cubic-bezier(.3,.6,.5,1) var(--d) both; }
+@keyframes rlFall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(112vh) rotate(var(--r)); opacity: 0; } }
+/* 서버 보상 받는 애니(결과 화면) */
+.netIn { animation: netIn 0.5s cubic-bezier(.2,1.6,.4,1) var(--nd, 0s) both; }
+@keyframes netIn { 0% { transform: translateY(14px) scale(0.6); opacity: 0; } 70% { transform: scale(1.08); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.rcOne.netIn .rcFlip .kArt { animation-delay: var(--nd, 0s); }
+#rGear .gl.netIn .gIco { animation: gearSpin 0.7s ease-out var(--nd, 0s) both; }
+@keyframes gearSpin { 0% { transform: rotate(-200deg) scale(0.4); } 100% { transform: none; } }
+#result .panel.netGot { animation: netGlow 1.1s ease-out; }
+@keyframes netGlow { 0% { box-shadow: 0 6px 0 var(--ink), 0 0 0 0 rgba(255,214,70,0.9); } 100% { box-shadow: 0 6px 0 var(--ink), 0 0 0 calc(18px * var(--s)) rgba(255,214,70,0); } }
+.rnScore { color: #ffd23f; font-size: 1.2em; font-variant-numeric: tabular-nums; }
+.rnGear { display: inline-flex; gap: 4px; vertical-align: middle; background: rgba(255,255,255,0.9); color: var(--ink); text-shadow: none; border-radius: 99px; padding: 0 8px; border: 2px solid var(--ink); }
+/* 이어 달리기 결과 화면은 진행 줄이 한 줄 더 → 별·칸을 작게(카드 줄 있을 때와 같은 꼴) */
+body.relayOn #stars .st { width: calc(34px * var(--s)); height: calc(34px * var(--s)); }
+body.relayOn #stars { margin: 0 0 calc(2px * var(--s)); }
+body.relayOn #result .panel { padding-top: calc(10px * var(--s)); padding-bottom: calc(10px * var(--s)); }
+body.relayOn #result .ptitle { font-size: calc(20px * var(--s)); margin-top: calc(9px * var(--s)); margin-bottom: calc(3px * var(--s)); }
+body.relayOn #result .stats { margin: calc(2px * var(--s)) 0 calc(4px * var(--s)); }
+body.relayOn #result .srow { padding: calc(2px * var(--s)) calc(12px * var(--s)); }
+body.relayOn #rMode { display: none !important; }
+#rankList { max-height: clamp(calc(64px * var(--s)), calc(92vh - 282px * var(--s)), calc(170px * var(--s))); max-height: clamp(calc(64px * var(--s)), calc(92dvh - 282px * var(--s)), calc(170px * var(--s))); } /* 낮은 화면(360px)에서 닫기 단추까지 한 화면에 — 줄은 목록 안에서 밀어 봄 */
+/* 낮은 화면(높이 400px 이하, 폰 가로): 순위판 설명 줄은 한 줄(…)로, 위아래 틈 줄여 닫기 단추까지 한 화면에 */
+@media (max-height: 400px) {
+  #rankNote { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #rankPick .ptitle { margin-top: calc(4px * var(--s)); margin-bottom: calc(2px * var(--s)); }
+  #rankPick .rkDuns { margin-bottom: calc(3px * var(--s)); }
+  #rankTabs { margin: calc(2px * var(--s)) 0; }
+  #rankPick .btns { margin-top: calc(3px * var(--s)); }
+  #rankClose { padding-top: calc(5px * var(--s)); padding-bottom: calc(5px * var(--s)); }
+}
+/* 결과·끝 화면 패널 왼쪽 띄움(주인공 보이게 30vw) — 패널 오른쪽에 붙는 쎌 말풍선이 화면 밖으로 안 나가게 화면 폭에 맞춰 줄임(폰 가로 844·740·667px 에서 잘렸음, 11-28) */
+.res, #relayEnd .rlPanel { margin-left: clamp(0px, calc(100vw - 690px * var(--s)), 30vw); }
+@media (max-width: 800px) and (min-aspect-ratio: 1/1) {
+  #sselRes .gtxt, #rlSsel .gtxt { max-width: calc(104px * var(--s)); }
+  #sselRes .gtxt span, #rlSsel .gtxt span { font-size: calc(13px * var(--s)); }
+}
+/* 세로·좁은 화면(터치 폰 세로는 「가로로 돌려 주세요」 화면이 덮음 — 이건 PC 좁은 창·태블릿용): 결과·끝 화면 패널을 가운데로, 쎌은 패널 안 오른쪽 아래 */
+@media (max-aspect-ratio: 1/1) {
+  .res, #relayEnd .rlPanel { margin-left: 0; }
+  #relayEnd .rlPanel { width: 94vw; }
+  #sselRes, #rlSsel { left: auto; right: calc(-6px * var(--s)); bottom: auto; top: calc(-70px * var(--s)); align-items: flex-end; }
+  #sselRes .sselImg, #rlSsel .sselImg { height: min(calc(56px * var(--s)), 12vh); }
+  #result .panel { margin-top: calc(60px * var(--s)); }
+  #rankNote { padding-right: 0; }
+  #rankPick .rankPanel { padding-bottom: calc(80px * var(--s)); }
+}
+#rankPick .rankPanel:has(#rankLogin:not(.hide)) #rankList { max-height: clamp(calc(64px * var(--s)), calc(92dvh - 372px * var(--s)), calc(170px * var(--s))); } /* 로그인 칸이 보일 땐 목록을 줄여 닫기 단추까지 */

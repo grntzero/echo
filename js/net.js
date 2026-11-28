@@ -118,12 +118,19 @@
     wrap(TG.W, 'merge', '/api/ez/wallet/merge', (g) => ({ g }));
     wrap(TG.W, 'levelUp', '/api/ez/wallet/levelup', () => ({}));
   }
-  // 구글 로그인 버튼 자리(주소·클라이언트 ID 는 설정값으로만). 없으면 false
+  // 구글 로그인 버튼(11-28 카드2단계화면): 설정값 googleClientId 가 들어오면 바로 동작 — 구글 스크립트 주소(gsiSrc)는 비면 구글 공식 주소. 비밀값 X(클라이언트 ID 는 공개값).
+  //   스크립트는 한 번만 받고 initialize 도 한 번만, 버튼은 자리마다 그림(폭은 자리 폭에 맞춤). 설정값이 비면 false(화면은 버튼 숨기고 안내)
+  const GSI_DEFAULT = 'https://accounts.google.com/gsi/client';
+  net.googleReady = () => !!C.googleClientId;
+  let gsiLoad = null, gsiCb = null;
   net.showGoogleButton = function (el, onToken) {
-    if (!C.gsiSrc || !C.googleClientId || !el) return false;
-    const s = document.createElement('script'); s.src = C.gsiSrc; s.async = true;
-    s.onload = () => { const g = W.google && W.google.accounts && W.google.accounts.id; if (!g) return; g.initialize({ client_id: C.googleClientId, callback: (r) => onToken(r.credential) }); g.renderButton(el, { type: 'standard', text: 'signin_with', locale: 'ko' }); };
-    document.head.appendChild(s); return true;
+    if (!C.googleClientId || !el) return false;
+    gsiCb = onToken;
+    if (!gsiLoad) gsiLoad = new Promise((ok, no) => { const s = document.createElement('script'); s.src = C.gsiSrc || GSI_DEFAULT; s.async = true; s.onload = ok; s.onerror = no; document.head.appendChild(s); })
+      .then(() => { const g = W.google && W.google.accounts && W.google.accounts.id; if (!g) throw new Error('no_gsi'); g.initialize({ client_id: C.googleClientId, callback: (r) => { if (gsiCb && r && r.credential) gsiCb(r.credential); } }); return g; });
+    gsiLoad.then((g) => { el.innerHTML = ''; g.renderButton(el, { type: 'standard', theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'ko', width: Math.max(200, Math.min(320, el.clientWidth || 240)) }); el.dataset.gsi = 'ok'; })
+      .catch(() => { el.dataset.gsi = 'fail'; gsiLoad = null; if (TG.H && TG.H.rankSay) TG.H.rankSay('구글 로그인을 못 불러왔어. 잠깐 뒤에 다시!', 'bow'); });
+    return true;
   };
   // 켤 때: 서버 정보 + (로그인돼 있으면) 내 상태·확인 중 판
   net.boot = async function () { await net.fetchInfo(); if (net.active()) { await net.refresh(); await net.checkPending(); } return net.info; };
