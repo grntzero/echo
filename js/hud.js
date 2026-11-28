@@ -218,7 +218,7 @@
     const n = TG.net, dev = !!(n.info && n.info.dev), g = !!(n.googleReady && n.googleReady());
     H.show(H.rankLoginBtn, dev); { const sp = H.rankLoginBtn.querySelector('span'); if (sp) sp.textContent = g ? '시험 로그인' : '로그인'; }
     H.show(H.rankGsi, g);
-    if (g && !H.rankGsi.dataset.on) { H.rankGsi.dataset.on = '1'; n.showGoogleButton(H.rankGsi, (tok) => n.login({ idToken: tok, ageAck: true }).then(loginOk(n)).catch(loginNo)); }
+    if (g && (!H.rankGsi.dataset.on || H.rankGsi.dataset.gsi === 'fail')) { H.rankGsi.dataset.on = '1'; delete H.rankGsi.dataset.gsi; n.showGoogleButton(H.rankGsi, (tok) => n.login({ idToken: tok, ageAck: true }).then(loginOk(n)).catch(loginNo)); }
     const no = $('rankLoginNo'); if (no) H.show(no, !g && !dev);
     return g ? 'google' : dev ? 'dev' : 'none';
   };
@@ -234,7 +234,8 @@
   };
   H.rankGo = function (dun) {
     if (rankBusy) return; rankBusy = true;
-    TG.net.startRun('rank', dun).then(() => { rankBusy = false; H.show(H.rankPick, false); TG.net.go(); }).catch((e) => { rankBusy = false; H.rankSay((e.info && e.info.message) || '지금은 못 가. 잠깐 뒤에 다시!', 'bow'); H.rankRender(); });
+    if (TG.net.heroBusy && TG.net.heroBusy()) { rankBusy = false; H.rankSay('주인공 준비 중이야. 잠깐 뒤에 다시!', 'ok'); return; } // 11-28 검토수정 6: 모델 받는 중엔 서버 판을 안 엶(횟수 안 씀)
+    TG.net.startRun('rank', dun).then((j) => { H.show(H.rankPick, false); return TG.net.launch({ id: j.runId }, 'startBtn').then((ok) => { rankBusy = false; if (!ok) { H.show(H.rankPick, true); H.rankSay('지금은 못 가. 잠깐 뒤에 다시!', 'bow'); H.rankRender(); } }); }).catch((e) => { rankBusy = false; H.rankSay((e.info && e.info.message) || '지금은 못 가. 잠깐 뒤에 다시!', 'bow'); H.rankRender(); });
   };
   H.rankRender = function () {
     const n = TG.net; if (!n || !n.on || !H.rankPick) return;
@@ -278,6 +279,8 @@
     const R = H.lastRes;
     if (!R.net || (r.id && R.net.runId && r.id !== R.net.runId)) return; // 11-28 지금 결과 화면의 판이 아니면(이어 달리기 앞 다리·지난 판) 덮지 않음
     R.net.status = r.status;
+    if (r.status === 'offline') { H.show(H.rNet, true); H.rNet.textContent = '보내지 못함 · 연결되면 기록을 보낼게~'; return; } // 11-28 검토수정 7: 제출 실패 = 「보내지 못함」(연결되면 net.js 가 다시 보냄)
+    if (r.status === 'pending') { H.show(H.rNet, true); H.rNet.textContent = '기록 확인 중이야, 곧 올라갈 거야~'; return; } // 다시 보내기 성공 → 확인 중
     if (r.status === 'verified') {
       const rw = r.reward || {};
       if (R.net && R.net.mode === 'rank') { // 11-28 끝까지 모드: 점수 세어 올라감 + 다리 톱니 톡

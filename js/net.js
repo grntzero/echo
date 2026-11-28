@@ -78,12 +78,73 @@
     return j;
   };
   net.go = function () { const b = document.getElementById('startBtn'); if (b) b.click(); };
+  // 11-28 검토수정(독립검토 1·6): 서버 판 표(TG.netRun)가 게임에 안 쓰이고 남으면 다음 일반판이 그 서버 판으로 시작됨 → 못 쓴 표는 바로 버림
+  net.dropRun = function (id) { if (TG.netRun && (id == null || TG.netRun.id === id)) TG.netRun = null; };
+  net.heroBusy = () => !!(W.document && W.document.body && W.document.body.classList.contains('heroWait')); // 주인공 모델 받는 중 = game.js startIntro 가 아무것도 안 함
+  // 판 시작 길(광장 「시작」·결과 「다시 한번」)을 누르고, 게임이 정말 그 표를 받았나 봄. 주인공 모델을 받는 중이면 풀릴 때까지(최대 25초) 기다렸다 누름.
+  //   못 쓰면(기다려도 안 풀림·누를 단추 없음·누른 뒤에도 표가 그대로) 표를 버리고 false. cancel() 이 true 면(이어 달리기 그만 등) 버리고 false
+  net.launch = function (run, btnId, cancel) {
+    return new Promise((ok) => {
+      const t0 = Date.now();
+      const step = () => {
+        if (cancel && cancel()) { net.dropRun(run && run.id); return ok(false); }
+        if (net.heroBusy()) { if (Date.now() - t0 < 25000) return setTimeout(step, 250); net.dropRun(run && run.id); return ok(false); }
+        const b = document.getElementById(btnId || 'startBtn'); if (b) b.click();
+        if (!b || (TG.netRun && run && TG.netRun.id === run.id && !(W.__tg && W.__tg.state && W.__tg.state().phase === 'intro'))) { net.dropRun(run && run.id); return ok(false); }
+        ok(true);
+      };
+      step();
+    });
+  };
   // 판 끝(game.js finish): 기록+결과 제출 → 「확인 중」. 못 보내면 기기에 모아 두고 다음에
   net.submit = async function (run, rec, result) {
     const res = {}; ['clear', 'tick', 'hash', 'fogs', 'notes', 'combo', 'level', 'floor', 'boss', 'time', 'rank', 'dungeon', 'lv'].forEach((k) => { if (result[k] !== undefined) res[k] = result[k]; });
-    try { const j = await call('POST', '/api/ez/runs', { runId: run.id, rec, result: res }); net.pendingIds.push(run.id); LS.set(K_PEND, JSON.stringify(net.pendingIds.slice(-20))); if (TG.H && TG.H.netPending) TG.H.netPending(run, j.message || net.say.pending); net.poll(run.id); return j; }
-    catch (e) { if (TG.H && TG.H.netPending) TG.H.netPending(run, e.status ? (e.info && e.info.message) || '이 기록은 올릴 수 없었어. 다음 판에 또 해 보자!' : '연결되면 기록을 보낼게~'); return { status: e.status ? 'rejected' : 'offline', error: e.message }; }
+    return send({ id: run.id, mode: run.mode, rec, res }, result);
   };
+  // 11-28 검토수정(독립검토 7): 보내기 하나(처음·다시 보내기 같은 길). 연결 끊김·서버 잠깐 오류(5xx) = 「보내지 못함」(offline) → 기기에 모아 두고 연결되면 다시 보냄(runId 하나에 한 번만 — 보내는 중이면 또 안 보냄).
+  //   서버가 받으면 「확인 중」 + 상태 묻기(net.poll) 그대로 · 서버가 거절(4xx, 이미 받은 판 409 포함) = 다시 안 보냄(409 는 상태 묻기로 이어 감)
+  const K_RETRY = 'ez_net_retry', sending = {};
+  let retryQ = []; try { retryQ = JSON.parse(LS.get(K_RETRY) || '[]'); } catch (e) { retryQ = []; }
+  const saveQ = () => { retryQ = retryQ.slice(-5); LS.set(K_RETRY, JSON.stringify(retryQ)); };
+  const dropQ = (id) => { const n = retryQ.length; retryQ = retryQ.filter((x) => x.id !== id); if (retryQ.length !== n) saveQ(); };
+  const curRes = (id) => { const R = TG.H && TG.H.lastRes; return R && R.net && R.net.runId === id ? R : null; }; // 지금 결과 화면이 그 판일 때만 화면 글을 바꿈
+  async function send(item, result) {
+    const id = item.id; if (sending[id]) return { status: 'sending' }; sending[id] = 1;
+    try {
+      const j = await call('POST', '/api/ez/runs', { runId: id, rec: item.rec, result: item.res });
+      dropQ(id); accepted(id, result, j.message || net.say.pending); return j;
+    } catch (e) {
+      if (!e.status || e.status >= 500) { // 보내지 못함 → 모아 두고 연결되면
+        if (!retryQ.some((x) => x.id === id)) { retryQ.push(item); saveQ(); }
+        const R = result || curRes(id); if (R && R.net && R.net.runId === id) R.net.status = 'offline';
+        if (TG.H && TG.H.netResult) TG.H.netResult({ id, status: 'offline' });
+        retryLater(); return { status: 'offline', error: e.message };
+      }
+      dropQ(id);
+      if (e.status === 409) { accepted(id, result, net.say.pending); return { status: 'pending' }; } // 이미 받은 판(앞서 보낸 게 닿았음) → 상태 묻기
+      const R = result || curRes(id); if (R && R.net && R.net.runId === id) R.net.status = 'rejected';
+      if (TG.H && TG.H.netResult) TG.H.netResult({ id, status: 'rejected' });
+      if (TG.H && TG.H.netPending && (result || curRes(id))) TG.H.netPending({ id }, (e.info && e.info.message) || '이 기록은 올릴 수 없었어. 다음 판에 또 해 보자!');
+      return { status: 'rejected', error: e.message };
+    } finally { delete sending[id]; }
+  }
+  function accepted(id, result, msg) {
+    if (net.pendingIds.indexOf(id) < 0) net.pendingIds.push(id); LS.set(K_PEND, JSON.stringify(net.pendingIds.slice(-20)));
+    if (!result && TG.H && TG.H.netResult) TG.H.netResult({ id, status: 'pending' }); // 다시 보낸 판: 「보내지 못함」 → 「확인 중」(이어 달리기 다리·지금 결과 화면)
+    const R = result || curRes(id); if (R && R.net && R.net.runId === id) { R.net.status = 'pending'; if (TG.H && TG.H.netPending) TG.H.netPending({ id }, msg); }
+    net.poll(id);
+  }
+  // 다시 보내기: 연결되면(online)·켤 때(boot)·20초마다(모아 둔 게 있을 때만). 로그인이 바뀌었으면(다른 계정) 서버가 거절 → 버림
+  let retryTO = null;
+  function retryLater() { if (!retryTO && retryQ.length) retryTO = setTimeout(() => { retryTO = null; net.retry(); }, 20000); }
+  net.retry = async function () {
+    if (!net.active() || !retryQ.length) return 0;
+    const list = retryQ.slice(); let n = 0;
+    for (const it of list) { const j = await send(it, null); if (j && j.status !== 'offline' && j.status !== 'sending') n++; }
+    return n;
+  };
+  net.retryList = () => retryQ.map((x) => x.id);
+  W.addEventListener('online', () => { net.retry(); });
   // 상태 묻기(검산은 맥미니가 몇 분 안에) — 5초·10초·20초·40초… 최대 8번. 확인되면 결과 화면 갱신
   net.poll = function (id, n) {
     n = n | 0; if (n >= 8) return;
@@ -133,6 +194,8 @@
     return true;
   };
   // 켤 때: 서버 정보 + (로그인돼 있으면) 내 상태·확인 중 판
-  net.boot = async function () { await net.fetchInfo(); if (net.active()) { await net.refresh(); await net.checkPending(); } return net.info; };
+  net.boot = async function () { await net.fetchInfo(); if (net.active()) { await net.refresh(); await net.checkPending(); await net.retry(); } return net.info; };
+  // 11-28 검토수정(독립검토 1·4·6): 광장(타이틀)으로 돌아오면 = 쓰이지 않은 서버 판 표는 버림(멈춤 「광장으로」·결과 「광장으로」·이어 달리기 끝 모두 game.js toTitle → H.sselTitleStart)
+  if (TG.H && TG.H.sselTitleStart) { const t0 = TG.H.sselTitleStart; TG.H.sselTitleStart = function () { net.dropRun(); if (TG.H.onTitle) { try { TG.H.onTitle(); } catch (e) { /* 무시 */ } } return t0.apply(this, arguments); }; }
   if (W.document && W.document.readyState !== 'loading') setTimeout(() => { net.boot(); }, 0); else W.addEventListener('DOMContentLoaded', () => { net.boot(); });
 })();

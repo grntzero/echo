@@ -27,6 +27,7 @@
     const me = net.me, rk = me && me.rank;
     if (!net.active() || !me || me.needNick || !rk || !rk.duns || rk.duns.length < 1) return false;
     if (R.left() === 0) { if (H.rankSay) H.rankSay('오늘 이어 달리기는 다 했어! 내일 06시에 또 하자~', 'ok'); return false; }
+    if (net.heroBusy && net.heroBusy()) return false; // 11-28 검토수정 6: 주인공 모델 받는 중엔 안 엶(서버 횟수 안 씀) → 순위판 「잠깐 뒤에 다시!」
     R.on = true; R.i = 0; R.date = rk.date; R.t0 = Date.now(); R.ended = null; R.sel0 = Object.assign({}, TG.DN.sel);
     R.legs = rk.duns.map((d) => ({ dun: d, st: 'wait' }));
     document.body.classList.add('relayOn');
@@ -40,15 +41,19 @@
     const L = R.legs[R.i]; if (!L) return R.end('done');
     L.st = 'start';
     return net.startRun('rank', L.dun).then((j) => {
-      if (!R.on) return;
-      L.runId = j.runId; L.st = 'play'; L.at = Date.now();
+      if (!R.on) { net.dropRun(j.runId); return; } // 11-28 검토수정 1: 응답 전에 끝났으면 서버 판 표를 버림(다음 일반판이 서버 판으로 안 바뀌게)
+      L.runId = j.runId;
       if (H.rankPick) H.show(H.rankPick, false);
       const res = H.result && !H.result.classList.contains('hide');
-      const b = $(res ? 'againBtn' : 'startBtn'); if (b) b.click();
-      chip();
+      // 11-28 검토수정 6: 게임이 정말 그 판을 시작했나 확인(주인공 모델 받는 중이면 풀릴 때까지 기다림) — 못 시작하면 표 버리고 「못 감」으로 끝
+      return net.launch({ id: j.runId }, res ? 'againBtn' : 'startBtn', () => !R.on || R.legs[R.i] !== L).then((ok) => {
+        if (!R.on || R.legs[R.i] !== L) return;
+        if (!ok) { L.st = 'skip'; L.why = '못 감'; return R.end('fail'); }
+        L.st = 'play'; L.at = Date.now(); chip();
+      });
     }).catch((e) => {
       if (!R.on) return;
-      if (e && e.status === 429) { L.st = 'skip'; L.why = '오늘 다 함'; R.i++; return R.i < R.legs.length ? R.leg() : R.end('done'); } // 그 던전만 다 했으면(따로 한 판 등) 건너뜀
+      if (e && e.status === 429) { L.st = 'skip'; L.why = '오늘 다 함'; R.i++; if (R.i >= R.legs.length) return R.end('done'); const p = R.leg(); if (H.result && !H.result.classList.contains('hide')) R.renderStrip(false); return p; } // 그 던전만 다 했으면(따로 한 판 등) 건너뜀
       L.st = 'skip'; L.why = e && e.status ? '못 감' : '연결 끊김';
       R.end(e && e.status ? 'fail' : 'net');
     });
@@ -62,14 +67,21 @@
     R.renderStrip(true);
     const last = R.i >= R.legs.length - 1;
     if (last) endTO = setTimeout(() => R.end('done'), 2800);
-    else { let n = R.CD; const go = $('rlGo'); cdIv = setInterval(() => { n--; const s = go && go.querySelector('.rlCd'); if (s) s.textContent = Math.max(0, n); if (n <= 0) { clearInterval(cdIv); cdIv = null; } }, 1000); cdTO = setTimeout(R.next, R.CD * 1000); }
+    else { // 11-28 검토수정 3: 5초 카운트다운은 탭이 보일 때만 셈(숨긴 동안 멈춤 → 다시 보이면 이어 셈 — 숨긴 채 다음 다리가 저절로 시작되지 않게)
+      let n = R.CD;
+      cdIv = setInterval(() => { if (document.hidden) return; n--; const go = $('rlGo'), s = go && go.querySelector('.rlCd'); if (s) s.textContent = Math.max(0, n); if (n <= 0) { clearInterval(cdIv); cdIv = null; R.next(); } }, 1000);
+    }
   };
-  R.next = function () { if (!R.on) return; stopTimers(); R.i++; if (R.i >= R.legs.length) return R.end('done'); R.renderStrip(false); return R.leg(); };
-  R.stop = function () { if (!R.on) return; stopTimers(); R.end('stop'); };
+  // 11-28 검토수정 2: 지금 다리가 서버 응답 기다림(start)·판 진행(play)이면 「다음 던전」을 무시(두 번 눌러도 다리 하나만)
+  const busy = () => { const L = R.legs[R.i]; return !!(L && (L.st === 'start' || L.st === 'play')); };
+  R.next = function () { if (!R.on || busy()) return; stopTimers(); R.i++; if (R.i >= R.legs.length) return R.end('done'); const p = R.leg(); R.renderStrip(false); return p; };
+  R.stop = function () { if (!R.on || busy()) return; stopTimers(); R.end('stop'); };
+  // 11-28 검토수정 4: 광장(타이틀)으로 돌아오면 바로 이어 달리기 끝(폴링 400ms 를 기다리지 않음 — net.js 가 H.sselTitleStart 에서 부름). tick 은 보조로 남김
+  H.onTitle = function () { if (!R.on) return; const L = R.legs[R.i]; if (L && (L.st === 'play' || L.st === 'start')) { L.st = 'skip'; L.why = '멈춤'; } R.end('quit'); };
   // 검산 결과(H.netResult) — 다리 점수·확인 채우고 화면 갱신
   R.onNet = function (r) {
     const legs = R.on ? R.legs : R.ended ? R.ended.legs : []; const L = legs.find((x) => x.runId && x.runId === r.id); if (!L) return false;
-    L.ver = r.status; L.score = r.score | 0; L.gear = (r.reward && r.reward.gear) || null;
+    L.ver = r.status === 'pending' ? null : r.status; L.score = r.score | 0; L.gear = (r.reward && r.reward.gear) || null; // 11-28 검토수정 7: offline = 보내지 못함(연결되면 다시 보냄) · pending = 다시 보내서 확인 중
     if (R.on) R.renderStrip(false); if (R.ended) { R.renderEnd(); if (legs.every((x) => !x.runId || x.ver === 'verified' || x.ver === 'rejected')) R.mine(); }
     return true;
   };
@@ -94,7 +106,7 @@
   // ── 결과 화면 진행 줄 ──
   function legHtml(L, i, cur) {
     const st = L.st === 'done' ? (L.clear ? 'ok' : 'fall') : L.st === 'skip' ? 'skip' : i === cur ? 'now' : 'wait';
-    const sc = L.ver === 'verified' ? (L.score ? num(L.score) + '점' : '점수 0') : L.ver === 'rejected' ? '못 올림' : L.ver === 'offline' ? '연결되면' : L.st === 'done' && L.net ? '확인 중' : '';
+    const sc = L.ver === 'verified' ? (L.score ? num(L.score) + '점' : '점수 0') : L.ver === 'rejected' ? '못 올림' : L.ver === 'offline' ? '보내지 못함' : L.st === 'done' && L.net ? '확인 중' : '';
     const sub = L.st === 'done' ? (L.clear ? '깸 ' : '쓰러짐 ') + fmt(L.time) + (sc ? ' · ' + sc : '') : L.st === 'skip' ? (L.why || '건너뜀') : i === cur ? '지금' : '다음';
     return '<span class="rlLeg ' + st + '" style="--dc:' + ((TG.DUNGEONS[L.dun] || {}).color || '#888') + '"><i>' + (st === 'ok' ? '✓' : i + 1) + '</i><span class="rlTx"><b>' + esc(dName(L.dun)) + '</b><small>' + sub + '</small></span></span>';
   }
@@ -106,10 +118,11 @@
       : '<div class="rlBtns"><button id="rlGo" class="bub yel" type="button"><span class="ol">다음 던전 · ' + esc(dName(R.legs[cur + 1].dun)) + ' <i class="rlCd">' + R.CD + '</i></span></button><button id="rlStop" class="bub sky" type="button"><span class="ol">그만하기</span></button></div>';
     const cd = el.querySelector('.rlCd'), keep = cd ? cd.textContent : null;
     el.innerHTML = h; H.show(el, true);
+    if (R.legs[cur] && R.legs[cur].st === 'start') el.querySelectorAll('.rlBtns button').forEach((b) => { b.disabled = true; b.style.opacity = '0.55'; b.style.pointerEvents = 'none'; }); // 11-28 검토수정 1·2: 서버 응답 기다리는 동안 단추 끔
     if (keep != null && !withBtns) { const c2 = el.querySelector('.rlCd'); if (c2) c2.textContent = keep; }
-    bind('rlGo', () => R.next()); bind('rlStop', () => R.stop()); bind('rlEnd', () => R.end('done'));
+    bind('rlGo', () => R.next()); bind('rlStop', () => R.stop()); bind('rlEnd', () => { if (!busy()) R.end('done'); });
   };
-  function bind(id, fn) { const b = $(id); if (b) b.addEventListener('click', (e) => { e.stopPropagation(); if (TG.A) { TG.A.unlock(); TG.A.ui(1.1); } fn(); }); }
+  function bind(id, fn) { const b = $(id); if (b) b.addEventListener('click', (e) => { e.stopPropagation(); if (b.disabled) return; if (TG.A) { TG.A.unlock(); TG.A.ui(1.1); } fn(); }); }
   const sumTime = (legs) => legs.reduce((a, x) => a + (x.st === 'done' ? x.time || 0 : 0), 0);
 
   // ── 끝 화면(순위판 끝) ──
@@ -120,12 +133,12 @@
     const sub = all ? '오늘의 3던전을 전부 깼어!' : E.why === 'net' ? '한 다리까지는 기록이 남아 · 연결되면 다시 해 보자' : clr ? clr + '던전 깸 · 깬 던전 점수가 순위에 들어가' : '이번엔 못 깼어 · 톱니는 챙겼어';
     $('rlTitle').textContent = T; $('rlSub').textContent = sub;
     $('rlList').innerHTML = legs.map((L, i) => { const s = L.st === 'done' ? (L.clear ? 'ok' : 'fall') : 'skip';
-      const sc = L.ver === 'verified' ? (L.score ? '<b class="rlSc" data-to="' + (L.score | 0) + '">' + num(L.score) + '</b>점' : '점수 0') : L.ver === 'rejected' ? '못 올림' : L.ver === 'offline' ? '연결되면 올라가' : L.st === 'done' && L.net ? '<span class="rlWait">확인 중…</span>' : '—';
+      const sc = L.ver === 'verified' ? (L.score ? '<b class="rlSc" data-to="' + (L.score | 0) + '">' + num(L.score) + '</b>점' : '점수 0') : L.ver === 'rejected' ? '못 올림' : L.ver === 'offline' ? '보내지 못함 · 연결되면 보낼게' : L.st === 'done' && L.net ? '<span class="rlWait">확인 중…</span>' : '—';
       return '<div class="rlRow ' + s + '" style="--dc:' + ((TG.DUNGEONS[L.dun] || {}).color || '#888') + '"><span class="rlN">' + (s === 'ok' ? '✓' : i + 1) + '</span><span class="rlNm">' + esc(dName(L.dun)) + '</span><span class="rlSt">' + (s === 'ok' ? '깸' : s === 'fall' ? '쓰러짐' : '안 함') + (L.st === 'done' ? ' · ' + fmt(L.time) : '') + '</span><span class="rlS">' + sc + '</span></div>'; }).join('');
     const ver = legs.filter((x) => x.ver === 'verified'), wait = legs.some((x) => x.st === 'done' && x.net && !x.ver);
     const tot = ver.reduce((a, x) => a + (x.score | 0), 0);
     $('rlSum').innerHTML = '<span>걸린 시간 <b>' + fmt(sumTime(legs)) + '</b></span><span>점수 합 <b>' + (wait && !ver.length ? '확인 중' : num(tot) + (wait ? '+' : '')) + '</b></span><span>' + done + ' / ' + legs.length + ' 다리</span>';
-    const b = E.board; $('rlMine').textContent = b && b.me ? '오늘 내 순위 ' + b.me.rank + '위 / ' + b.n + '명 · ' + num(b.me.score) + '점' + (b.me.finished ? ' · 완주!' : '') : wait ? '맥미니가 기록을 확인하면 순위판에 올라가~' : '';
+    const b = E.board; $('rlMine').textContent = b && b.me ? '오늘 내 순위 ' + b.me.rank + '위 / ' + b.n + '명 · ' + num(b.me.score) + '점' + (b.me.finished ? ' · 완주!' : '') : wait ? '맥미니가 기록을 확인하면 순위판에 올라가~' : legs.some((x) => x.ver === 'offline') ? '보내지 못한 기록은 연결되면 다시 보낼게~' : '';
     const left = R.left(); $('rlLeft').textContent = left == null ? '' : left > 0 ? '오늘 이어 달리기 ' + left + '번 더 할 수 있어' : '오늘 이어 달리기는 다 했어 · 내일 06시에 새 3던전';
     const box = $('rlSsel'), tx = $('rlSselTxt');
     if (first && box && tx) {

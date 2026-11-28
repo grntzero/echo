@@ -78,8 +78,8 @@
       const H = POY_H, out = [P.box(0, 0.24, -1.05, [3.4, 0.48, 1.3], SILVER_D), P.box(0, 0.52, -1.05, [3.0, 0.1, 1.1], 0xe9edf2), P.box(0, 0.24, -0.39, [3.0, 0.1, 0.03], MINT),
         P.cyl(0, (0.5 + H + 1.4) / 2, -0.95, 0.26, 0.32, H + 0.9, 0xc4cbd4, null, 10), P.cyl(0, H, -0.45, 0.24, 0.24, 1.0, SILVER_D, [PI / 2, 0, 0], 10),
         P.cyl(0, H, 0.08, 0.95, 0.95, 0.66, 0xf4f6f8, [PI / 2, 0, 0], 26), P.sph(0, H, 0.41, 0.95, 20, 0xf6f8fa, [1, 1, 0.28]), P.tor(0, H, 0.41, 0.96, 0.08, SILVER, [0, 0, 0], 26),
-        P.tor(-0.41, H + 0.14, 0.64, 0.42, 0.05, MINT, [0, -0.28, 0], 18), P.tor(0.41, H + 0.14, 0.64, 0.42, 0.05, MINT, [0, 0.28, 0], 18),
-        P.box(0, H - 0.27, 0.66, [0.8, 0.07, 0.04], 0x55606a), P.box(-0.26, H - 0.27, 0.69, [0.14, 0.15, 0.05], MINT_D), // 슬라이더 홈 입(손잡이는 0 쪽)
+        P.tor(-0.43, H + 0.14, 0.64, 0.47, 0.05, MINT, [0, -0.28, 0], 18), P.tor(0.43, H + 0.14, 0.64, 0.47, 0.05, MINT, [0, 0.28, 0], 18), // 11-28 포즈판: 눈 테 0.42→0.47(눈 크게)
+        P.box(0, H - 0.37, 0.64, [0.8, 0.07, 0.04], 0x55606a), P.box(-0.26, H - 0.37, 0.67, [0.14, 0.15, 0.05], MINT_D), // 슬라이더 홈 입(손잡이는 0 쪽) — 11-28 눈이 커져 조금 아래로
         P.box(0, H + 1.38, -0.78, [0.9, 0.56, 0.24], CREAM), P.box(0, H + 1.38, -0.86, [1.04, 0.7, 0.12], SILVER_D), P.tor(0, H + 1.38, -0.64, 0.15, 0.045, INK, [0, 0, 0], 12), P.cone(0, H + 1.0, -0.72, 0.1, 0.2, MINT, [PI, 0, 0], 6)];
       for (let i = 0; i < 12; i++) { const a = (i / 12) * PI * 2; out.push(P.box(Math.cos(a) * 0.82, H + Math.sin(a) * 0.82, 0.62, [0.04, 0.12, 0.03], i % 3 ? 0x9aa3ae : MINT_D, [0, 0, a - PI / 2])); } // 허브 둘레 눈금
       return U(out, b); },
@@ -91,7 +91,7 @@
       return out; },
     spin: true,
     bossC: [0, POY_H, -0.6],
-    bossFace: { var: 'dial', mat: { color: POY_TINT, key: 'bossdial', rim: 0.45, spec: 0.5, flashCol: 'vec3(0.9, 1.0, 0.95)', gy0: '0.0', gy1: '4.0', cx: '0.0', cy: String(POY_H), cz: '-0.6', sep: 0.31, ey: 0.1, size: 0.23,
+    bossFace: { var: 'dial', mat: { color: POY_TINT, key: 'bossdial', rim: 0.45, spec: 0.5, flashCol: 'vec3(0.9, 1.0, 0.95)', gy0: '0.0', gy1: '4.0', cx: '0.0', cy: String(POY_H), cz: '-0.6', sep: 0.32, ey: 0.1, size: 0.28, // 11-28 포즈판: 위 카메라에서 작아 0.23→0.28
       faces: [{ mouth: 'flat' }, { brow: 'worry', mouth: 'o', sweat: true }, { lid: 0.55, brow: 'worry', mouth: 'wavy', sweat: true }] } }, // 기본(멀뚱 계기판 눈·일자 슬라이더) → 당황 → 지침(바늘이 0으로 축)
     bossDraw: (function () {
       let acc = 0;
@@ -197,7 +197,7 @@
       const tg = tagged(list, 0xffffff); kilRng = tg; return tg.geos; },
     spin: false,
     bossC: [0, 1.5, -0.75],
-    bossFace: { var: 'drum', mat: { color: KIL_TINT, key: 'bossdrum', rim: 0.35, spec: 0.15, flashCol: 'vec3(1.0, 0.92, 0.85)', gy0: '0.0', gy1: '2.6', cx: '0.0', cy: '1.5', cz: '-0.75', sep: 0.3, ey: 0.1, size: 0.2,
+    bossFace: { var: 'drum', mat: { color: KIL_TINT, key: 'bossdrum', rim: 0.35, spec: 0.15, flashCol: 'vec3(1.0, 0.92, 0.85)', gy0: '0.0', gy1: '2.6', cx: '0.0', cy: '1.5', cz: '-0.75', sep: 0.31, ey: 0.2, size: 0.28, // 11-28 포즈판: 위 카메라에서 작아 0.2→0.28 · 눈 조금 위로(북 옆면 위쪽이 더 잘 보임)
       faces: [{ lid: 0.88 }, { lid: 0.25, brow: 'worry', sweat: true }, { lid: 0.6, brow: 'worry', sweat: true }] } }, // 쿨쿨 감은 눈(+ 별 눈꼬리·큰 O 입은 도형) → 깜짝 뜬 눈 → 지침
     bossDraw: (function () {
       let cyc = 0, rot = 0;
